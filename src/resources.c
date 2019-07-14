@@ -39,10 +39,11 @@ typedef struct{
 Shader resources_get_shader(u16 type, ResourceStatus status, MemoryArena tempArena){
 }
 
-SpriteSheet resources_get_sprite_sheet(u16 type, ResourceStatus status, MemoryArena tempArena){
-	if(status.spriteSheets[type].valid){
-		return status.spriteSheets[type];
+SpriteSheet resources_get_sprite_sheet(u16 type, ResourceStatus *status, MemoryArena tempArena){
+	if(status->spriteSheets[type].valid){
+		return status->spriteSheets[type];
 	}
+	systemAPI.system_log(LOG_DEBUG, "Loading sprite sheet id: %u", type);
 	File file;
 	switch(type){
 		case SS_BASIC:
@@ -53,17 +54,18 @@ SpriteSheet resources_get_sprite_sheet(u16 type, ResourceStatus status, MemoryAr
 	}
 	BMPHeader *header = file.content;
 	if(!file.valid || file.size < sizeof(BMPHeader) || (header->fileType != 0x4D42)){
+		systemAPI.system_log(LOG_ERROR, "Invalid BMP file");
 		systemAPI.system_close_file(file);
 	}
 	else{
-		status.spriteSheets[type] = (SpriteSheet){
+		status->spriteSheets[type] = (SpriteSheet){
 			.valid = true,
 			.handle = systemAPI.system_generate_texture(file.content + header->bitmapOffset, header->width, header->height),
 			.width = header->width,
 			.height = header->height,
-			.xMul = 1,
-			.yMul = 1,
+			.xMul = 64.0/header->width,
+			.yMul = 64.0/header->height,
 		};
 	}
-	return status.spriteSheets[type];
+	return status->spriteSheets[type];
 }

@@ -12,6 +12,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #define HANDMADE_MATH_IMPLEMENTATION
+#define SYSTEM_LAYER
 #include "HandmadeMath.h"
 #include "common.h"
 #include "system.h"
@@ -133,7 +134,7 @@ int main(){
 	}
 
 	//Init opengl system
-	GLState glState = opengl_state_init();
+	GLState glState = opengl_state_init(1080.0/720.0);
 
 	System systemAPI = (System){
 		.system_log              = system_log,

@@ -14,8 +14,8 @@ typedef struct{
 	u32 handle;
 	u32 width;
 	u32 height;
-	u32 xMul;
-	u32 yMul;
+	r32 xMul;
+	r32 yMul;
 } SpriteSheet;
 
 enum Shaders{
@@ -37,6 +37,6 @@ typedef struct{
 } ResourceStatus;
 
 Shader  resources_get_shader(u16 type, ResourceStatus status, MemoryArena tempArena);
-SpriteSheet resources_get_sprite_sheet(u16 type, ResourceStatus status, MemoryArena tempArena);
+SpriteSheet resources_get_sprite_sheet(u16 type, ResourceStatus *status, MemoryArena tempArena);
 
 #endif

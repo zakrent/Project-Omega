@@ -1,27 +1,22 @@
 #include "opengl_renderer.h"
 #include "render_list.h"
 
-/*const float points[] = {
+const float defaultPoints[] = {
 	-1.0, -1.0,
 	+1.0, -1.0,
 	+1.0, +1.0,
 	-1.0, -1.0,
 	+1.0, +1.0,
 	-1.0, +1.0
-};*/
-const float points[] = {
-	-1.0, -1.0, 0.0, 0.0,
-	+1.0, -1.0, 1.0, 0.0,
-	+1.0, +1.0, 1.0, 1.0,
-	-1.0, -1.0, 0.0, 0.0,
-	+1.0, +1.0, 1.0, 1.0,
-	-1.0, +1.0, 0.0, 1.0
 };
-
-typedef struct{
-	hmm_v2 position;
-	hmm_v2 texture;
-} __attribute__((packed)) Vertex;
+const float defaultTexturePoints[] = {
+	0.0, 0.0,
+	1.0, 0.0,
+	1.0, 1.0,
+	0.0, 0.0,
+	1.0, 1.0,
+	0.0, 1.0
+};
 
 const char* vertexShader =
 "#version 400\n"
@@ -40,7 +35,7 @@ const char* fragmentShader =
 "out vec4 frag_colour;"
 "uniform sampler2D spriteSheet;"
 "void main() {"
-"  frag_colour = texture(spriteSheet, TexCord);"
+"  frag_colour = texture(spriteSheet, vec2(TexCord.x, 1.0-TexCord.y));"
 "}";
 
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
@@ -59,25 +54,35 @@ SYSTEM_GENERATE_TEXTURE(opengl_generate_texture){
 			              GL_UNSIGNED_BYTE, data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	return handle;
 }
 
-GLState opengl_state_init(){
-	glEnable              ( GL_DEBUG_OUTPUT );
-	glDebugMessageCallback( MessageCallback, 0 );
+GLState opengl_state_init(r32 aspectRatio){
+	//glEnable              ( GL_DEBUG_OUTPUT );
+	//glDebugMessageCallback( MessageCallback, 0 );
 
 	GLState state;
-	glGenBuffers(1, &(state.mainVBO));
-	glBindBuffer(GL_ARRAY_BUFFER, state.mainVBO);
-	glBufferData(GL_ARRAY_BUFFER, 24 * sizeof(float), points, GL_STATIC_DRAW);
+
 	glGenVertexArrays(1, &(state.mainVAO));
 	glBindVertexArray(state.mainVAO);
+
+	glGenBuffers(1, &(state.vertexVBO));
+	glBindBuffer(GL_ARRAY_BUFFER, state.vertexVBO);
+	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), defaultPoints, GL_STATIC_DRAW);
+
+	glGenBuffers(1, &(state.textureVBO));
+	glBindBuffer(GL_ARRAY_BUFFER, state.textureVBO);
+	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), defaultTexturePoints, GL_STREAM_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, state.vertexVBO);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, state.textureVBO);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex,position));
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex,texture));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
 	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vs, 1, &vertexShader, NULL);
@@ -93,31 +98,73 @@ GLState opengl_state_init(){
 
 	state.mvpLocation = glGetUniformLocation(state.shader, "mvp");
 
+	state.texXMul = 1.0;
+	state.texYMul = 1.0;
+
+	state.p = HMM_Orthographic(-1.0*aspectRatio, 1.0*aspectRatio, 1.0, -1.0, 0.0, 100.0);
+	state.v = HMM_Scale(HMM_Vec3(1.0, 1.0, 1.0));
+
 	return state;
 }
 
 void opengl_render_list(MemoryArena *renderList, GLState state){
-	glClearColor(1.0, 0.0, 0.0, 0.0);
+	glClearColor(1.0, 0.0, 1.0, 0.0);
 	glUseProgram(state.shader);
-	/*glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	oglUniformMatrix4fvglDrawArrays(GL_TRIANGLES, 0, 3);*/
-	hmm_m4 mvp = HMM_Scale(HMM_Vec3(0.5, 0.5, 0.5));
-	glUniformMatrix4fv(state.mvpLocation, 1, GL_FALSE, (GLfloat*)&mvp);
-
 	u64 offset = 0;
 	while(offset < renderList->used){
 		u16 *entryType = (renderList->base+offset);
-		offset += sizeof(u16);
+		offset += sizeof(u32);
 		switch(*entryType){
 			case RL_COLOR_CLEAR:
 				{
 				glClear(GL_COLOR_BUFFER_BIT);
 				break;
 				}
+			case RL_USE_TEXTURE:
+				{
+				RLUseTexture *rlUseTexture = (renderList->base+offset);
+				offset += sizeof(RLUseTexture);
+				glBindTexture(GL_TEXTURE_2D, rlUseTexture->handle);
+				state.texXMul = rlUseTexture->xMul;
+				state.texYMul = rlUseTexture->yMul;
+				break;
+				}
+			case RL_SET_CAMERA:
+				{
+				RLSetCamera *rlSetCamera = (renderList->base+offset);
+				offset += sizeof(RLSetCamera);
+				state.v = HMM_MultiplyMat4(HMM_Translate(HMM_Vec3(rlSetCamera->pos.X, rlSetCamera->pos.Y, 0.0)),
+					   	HMM_Scale(HMM_Vec3(1.0/rlSetCamera->size.Width, 1.0/rlSetCamera->size.Height, 1.0)));
+				break;
+				}
 			case RL_DRAW_SPRITE:
 				{
-				RLDrawSprite *rlDrawSprite= (renderList->base+offset);
+				RLDrawSprite *rlDrawSprite = (renderList->base+offset);
 				offset += sizeof(RLDrawSprite);
+				
+				hmm_m4 m = HMM_MultiplyMat4(HMM_Translate(HMM_Vec3(rlDrawSprite->pos.X, rlDrawSprite->pos.Y, 0.0)),
+					   	HMM_Scale(HMM_Vec3(rlDrawSprite->size.Width*0.5, rlDrawSprite->size.Height*0.5, 1.0)));
+				hmm_m4 mvp = HMM_MultiplyMat4(state.p, HMM_MultiplyMat4(state.v, m));
+				glUniformMatrix4fv(state.mvpLocation, 1, GL_FALSE, (GLfloat*)&mvp);
+
+				float texturePoints[] = {
+					0.0, 0.0,
+					1.0, 0.0,
+					1.0, 1.0,
+					0.0, 0.0,
+					1.0, 1.0,
+					0.0, 1.0
+				};
+				for(int i = 0; i < 6; i++){
+					texturePoints[i*2]   *= rlDrawSprite->spriteSize.X*state.texXMul;
+					texturePoints[i*2+1] *= rlDrawSprite->spriteSize.Y*state.texYMul;
+					texturePoints[i*2]   += rlDrawSprite->spritePos.X*state.texXMul;
+					texturePoints[i*2+1] += rlDrawSprite->spritePos.Y*state.texYMul;
+				}
+
+				glBindBuffer(GL_ARRAY_BUFFER, state.textureVBO);
+				glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), texturePoints, GL_STREAM_DRAW);
+
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 				break;
 				}

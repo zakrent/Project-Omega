@@ -13,6 +13,7 @@ System systemAPI;
 
 typedef struct{
 	b32 initialized;
+	ResourceStatus resStatus;
 	MemoryArena masterArena;
 	MemoryArena transientArena;
 	MemoryArena renderList;
@@ -27,18 +28,24 @@ FRAME(frame){
 		gs->masterArena    = arena_init(memory.permanentMemory+sizeof(GameState), memory.permanentMemorySize);
 		gs->transientArena = arena_init(memory.transientMemory, memory.transientMemorySize);
 		gs->renderList     = arena_sub_arena(&(gs->transientArena), MEGABYTES(8));
+		gs->resStatus      = (ResourceStatus){0};
 		gs->initialized = true;
 		systemAPI.system_log(LOG_DEBUG, "GameState initialized");
 	}
 
-	File file = systemAPI.system_open_file("./test");
-	systemAPI.system_close_file(file);
+	SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, &(gs->resStatus), gs->renderList);
 
 	arena_clear(&(gs->renderList));
-	*(u32*)(arena_push(&(gs->renderList), sizeof(u32)))                   = RL_COLOR_CLEAR;
-	*(u32*)(arena_push(&(gs->renderList), sizeof(u32)))                   = RL_DRAW_SPRITE;
-	*(RLDrawSprite*)(arena_push(&(gs->renderList), sizeof(RLDrawSprite))) = (RLDrawSprite){.pos = HMM_Vec2(0.0, 0.0)};
-
-	ResourceStatus resStatus = (ResourceStatus){0};
-	resources_get_sprite_sheet(SS_BASIC, resStatus, gs->renderList);
+	LIST_PUSH(&(gs->renderList), u32, RL_COLOR_CLEAR);
+	LIST_PUSH(&(gs->renderList), u32, RL_SET_CAMERA);
+	LIST_PUSH(&(gs->renderList), RLSetCamera, ((RLSetCamera){.pos = HMM_Vec2(0.0, 0.0), .size = HMM_Vec2(5.0, 5.0)}));
+	LIST_PUSH(&(gs->renderList), u32, RL_USE_TEXTURE);
+	LIST_PUSH(&(gs->renderList), RLUseTexture, ((RLUseTexture){.handle = basicSheet.handle, .xMul = basicSheet.xMul, .yMul = basicSheet.yMul}));
+	for(int y = -1; y <= 1; y++){
+		for(int x = -1; x <= 1; x++){
+			LIST_PUSH(&(gs->renderList), u32, RL_DRAW_SPRITE);
+			LIST_PUSH(&(gs->renderList), RLDrawSprite, ((RLDrawSprite){.pos = HMM_Vec2(x, y),
+				.size = HMM_Vec2(1.0, 1.0), .spritePos = HMM_Vec2(1.0, 1.0), .spriteSize = HMM_Vec2(1.0, 1.0)}));
+		}
+	}
 }

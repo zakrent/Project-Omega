@@ -1,6 +1,8 @@
 #ifndef Z_RENDER_LIST_H
 #define Z_RENDER_LIST_H
 
+#define LIST_PUSH(list, type, var) *(type*)(arena_push_no_align(list, sizeof(type))) = var;
+
 enum RLEntryType{
 	RL_INVALID,
 
@@ -9,7 +11,7 @@ enum RLEntryType{
 	RL_USE_TEXTURE,
 	RL_USE_SHADER,
 
-	RL_SET_SHADER,
+	RL_SET_CAMERA,
 
 	RL_DRAW_SPRITE,
 
@@ -17,7 +19,21 @@ enum RLEntryType{
 };
 
 typedef struct{
+	u32 handle;
+	r32 xMul;
+	r32 yMul;
+}RLUseTexture;
+
+typedef struct{
 	hmm_vec2 pos;
+	hmm_vec2 size;
+}RLSetCamera;
+
+typedef struct{
+	hmm_vec2 pos;
+	hmm_vec2 size;
+	hmm_vec2 spritePos;
+	hmm_vec2 spriteSize;
 }RLDrawSprite;
 
 #endif
