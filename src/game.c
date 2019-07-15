@@ -11,37 +11,48 @@ System systemAPI;
 #include "game.h"
 #include "render_list.c"
 
+
+#include "entity.c"
+
 typedef struct{
 	b32 initialized;
+	EntitiesData entities;
 	ResourceStatus resStatus;
 	MemoryArena masterArena;
 	MemoryArena transientArena;
 	MemoryArena renderList;
 } GameState;
 
-
 FRAME(frame){
 	GameState *gs = memory.permanentMemory;
 	systemAPI = _systemAPI;
 	*renderList = &(gs->renderList);
+
 	if(!gs->initialized){
 		gs->masterArena    = arena_init(memory.permanentMemory+sizeof(GameState), memory.permanentMemorySize);
 		gs->transientArena = arena_init(memory.transientMemory, memory.transientMemorySize);
 		gs->renderList     = arena_sub_arena(&(gs->transientArena), MEGABYTES(8));
 		gs->resStatus      = (ResourceStatus){0};
+
+		entity_spawn_prefab(&(gs->entities), EPI_TANK, HMM_Vec2(0.0, 0.0), 0.0);
+
 		gs->initialized = true;
 		systemAPI.system_log(LOG_DEBUG, "GameState initialized");
 	}
+
+	entity_update(&(gs->entities));
 
 	SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, &(gs->resStatus), gs->renderList);
 
 	arena_clear(&(gs->renderList));
 	rl_color_clear(&(gs->renderList));
-	rl_set_camera(&(gs->renderList), HMM_Vec2(0.0, 0.0), HMM_Vec2(5.0, 5.0));
+	rl_set_camera(&(gs->renderList), HMM_Vec2(0.0, 0.0), HMM_Vec2(8.0, 8.0));
 	rl_use_texture(&(gs->renderList), basicSheet);
-	for(int y = -1; y <= 1; y++){
-		for(int x = -1; x <= 1; x++){
-			rl_draw_sprite(&(gs->renderList), HMM_Vec2(x, y), HMM_Vec2(1.0, 1.0), HMM_Vec2(x+1, y+1), HMM_Vec2(1.0, 1.0));
+	//rl_draw_sprite(&(gs->renderList), HMM_Vec2(0, 0), 3.14*systemAPI.time, HMM_Vec2(1.0, 1.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(1.0, 1.0));
+	for(int y = -15; y <= 15; y++){
+		for(int x = -15; x <= 15; x++){
+			rl_draw_sprite(&(gs->renderList), HMM_Vec2(x, y), 0.0, HMM_Vec2(1.0, 1.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(1.0, 1.0));
 		}
 	}
+	entity_draw(&(gs->entities), &(gs->renderList));
 }

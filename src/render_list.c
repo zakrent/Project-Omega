@@ -14,8 +14,8 @@ void rl_set_camera(MemoryArena* list, hmm_vec2 pos, hmm_vec2 size){
 	LIST_PUSH(list, RLSetCamera, ((RLSetCamera){.pos = pos, .size = size}));
 }
 
-void rl_draw_sprite(MemoryArena* list, hmm_vec2 pos, hmm_vec2 size, hmm_vec2 spritePos, hmm_vec2 spriteSize){
+void rl_draw_sprite(MemoryArena* list, hmm_vec2 pos, r32 rotation, hmm_vec2 size, hmm_vec2 spritePos, hmm_vec2 spriteSize){
 	LIST_PUSH(list, u32, RL_DRAW_SPRITE);
-	LIST_PUSH(list, RLDrawSprite, ((RLDrawSprite){.pos = pos,
+	LIST_PUSH(list, RLDrawSprite, ((RLDrawSprite){.pos = pos, .rotation = rotation,
 		.size = size, .spritePos = spritePos, .spriteSize = spriteSize}));
 }

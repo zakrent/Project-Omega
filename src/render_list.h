@@ -31,6 +31,7 @@ typedef struct{
 
 typedef struct{
 	hmm_vec2 pos;
+	r32 rotation;
 	hmm_vec2 size;
 	hmm_vec2 spritePos;
 	hmm_vec2 spriteSize;
@@ -41,7 +42,7 @@ typedef struct{
 void rl_color_clear(MemoryArena* list);
 void rl_use_texture(MemoryArena* list, SpriteSheet sheet);
 void rl_set_camera(MemoryArena* list, hmm_vec2 pos, hmm_vec2 size);
-void rl_draw_sprite(MemoryArena* list, hmm_vec2 pos, hmm_vec2 size, hmm_vec2 spritePos, hmm_vec2 spriteSize);
+void rl_draw_sprite(MemoryArena* list, hmm_vec2 pos, r32 rotation, hmm_vec2 size, hmm_vec2 spritePos, hmm_vec2 spriteSize);
 
 #endif
 

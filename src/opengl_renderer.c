@@ -54,8 +54,8 @@ SYSTEM_GENERATE_TEXTURE(opengl_generate_texture){
 			              GL_UNSIGNED_BYTE, data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	return handle;
 }
 
@@ -96,6 +96,9 @@ GLState opengl_state_init(){
 	glAttachShader(state.shader, vs);
 	glLinkProgram(state.shader);
 
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 	state.mvpLocation = glGetUniformLocation(state.shader, "mvp");
 
 	state.texXMul = 1.0;
@@ -118,7 +121,7 @@ void opengl_render_list(MemoryArena *renderList, GLState state){
 	glUseProgram(state.shader);
 	u64 offset = 0;
 	while(offset < renderList->used){
-		u16 *entryType = (renderList->base+offset);
+		u32 *entryType = (renderList->base+offset);
 		offset += sizeof(u32);
 		switch(*entryType){
 			case RL_COLOR_CLEAR:
@@ -148,8 +151,9 @@ void opengl_render_list(MemoryArena *renderList, GLState state){
 				RLDrawSprite *rlDrawSprite = (renderList->base+offset);
 				offset += sizeof(RLDrawSprite);
 				
-				hmm_m4 m = HMM_MultiplyMat4(HMM_Translate(HMM_Vec3(rlDrawSprite->pos.X, rlDrawSprite->pos.Y, 0.0)),
-					   	HMM_Scale(HMM_Vec3(rlDrawSprite->size.Width*0.5, rlDrawSprite->size.Height*0.5, 1.0)));
+				hmm_m4 m = HMM_MultiplyMat4( HMM_Translate(HMM_Vec3(rlDrawSprite->pos.X, rlDrawSprite->pos.Y, 0.0)),
+						   HMM_MultiplyMat4( HMM_Rotate(rlDrawSprite->rotation, HMM_Vec3(0.0,0.0,1.0)),
+							  				 HMM_Scale(HMM_Vec3(rlDrawSprite->size.Width*0.5, rlDrawSprite->size.Height*0.5, 1.0))));
 				hmm_m4 mvp = HMM_MultiplyMat4(state.p, HMM_MultiplyMat4(state.v, m));
 				glUniformMatrix4fv(state.mvpLocation, 1, GL_FALSE, (GLfloat*)&mvp);
 
