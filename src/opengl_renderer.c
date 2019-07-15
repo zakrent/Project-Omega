@@ -59,7 +59,7 @@ SYSTEM_GENERATE_TEXTURE(opengl_generate_texture){
 	return handle;
 }
 
-GLState opengl_state_init(r32 aspectRatio){
+GLState opengl_state_init(){
 	//glEnable              ( GL_DEBUG_OUTPUT );
 	//glDebugMessageCallback( MessageCallback, 0 );
 
@@ -101,14 +101,20 @@ GLState opengl_state_init(r32 aspectRatio){
 	state.texXMul = 1.0;
 	state.texYMul = 1.0;
 
-	state.p = HMM_Orthographic(-1.0*aspectRatio, 1.0*aspectRatio, 1.0, -1.0, 0.0, 100.0);
+	state.p = HMM_Orthographic(-1.0*16.0/9.0, 1.0*16.0/9.0, 1.0, -1.0, 0.0, 100.0);
 	state.v = HMM_Scale(HMM_Vec3(1.0, 1.0, 1.0));
+
+	glClearColor(1.0, 0.0, 1.0, 0.0);
 
 	return state;
 }
 
 void opengl_render_list(MemoryArena *renderList, GLState state){
-	glClearColor(1.0, 0.0, 1.0, 0.0);
+	r32 windowSizeData[4];
+	glGetFloatv(GL_VIEWPORT, windowSizeData);
+	r32 aspectRatio = windowSizeData[2]/windowSizeData[3];
+	state.p = HMM_Orthographic(-1.0*aspectRatio, 1.0*aspectRatio, 1.0, -1.0, 0.0, 100.0);
+
 	glUseProgram(state.shader);
 	u64 offset = 0;
 	while(offset < renderList->used){
@@ -169,6 +175,7 @@ void opengl_render_list(MemoryArena *renderList, GLState state){
 				break;
 				}
 			default:
+				assert(0);
 				break;
 		}
 	}

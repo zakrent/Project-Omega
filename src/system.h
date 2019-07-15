@@ -28,7 +28,6 @@ typedef SYSTEM_GENERATE_TEXTURE(SystemGenerateTexture);
 
 typedef struct{
 	r32 time;
-	r32 aspectRatio;
 	SystemLog             *system_log;
 	SystemOpenFile        *system_open_file;
 	SystemCloseFile       *system_close_file;

@@ -13,7 +13,7 @@ typedef struct{
 	hmm_m4 p;
 } GLState;
 
-GLState opengl_state_init(r32 aspectRatio);
+GLState opengl_state_init();
 void opengl_render_list(MemoryArena *renderList, GLState state);
 
 #endif

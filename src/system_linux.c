@@ -27,6 +27,10 @@ void glfw_error_callback(int error, const char* description){
 	fprintf(stderr, "GLFW error: %s\n", description);
 }
 
+void framebuffer_size_callback(GLFWwindow* window, int width, int height){
+	glViewport(0, 0, width, height);
+}
+
 void die(const char *fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
@@ -47,13 +51,13 @@ SYSTEM_LOG(system_log){
 				fprintf(stderr, "[DEBUG]: ");
 		break;
 		case LOG_INFO:
-				fprintf(stderr, "[DEBUG]: ");
+				fprintf(stderr, "[INFO]: ");
 		break;
 		case LOG_WARN:
-				fprintf(stderr, "[DEBUG]: ");
+				fprintf(stderr, "[WARN]: ");
 		break;
 		case LOG_ERROR:
-				fprintf(stderr, "[DEBUG]: ");
+				fprintf(stderr, "[ERROR]: ");
 		break;
 	}
 	va_list ap;
@@ -103,6 +107,9 @@ int main(){
 
 	glfwMakeContextCurrent(window);
 
+	//Set GLFW callbacks
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
 	//Load OpenGL 4.5
 	if(glewInit() != GLEW_OK || !GLEW_VERSION_4_5){
 		die("Could not load OpenGL 4.5 function pointers.");
@@ -134,7 +141,7 @@ int main(){
 	}
 
 	//Init opengl system
-	GLState glState = opengl_state_init(1080.0/720.0);
+	GLState glState = opengl_state_init();
 
 	System systemAPI = (System){
 		.system_log              = system_log,

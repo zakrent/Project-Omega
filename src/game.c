@@ -9,7 +9,7 @@ System systemAPI;
 #include "memory_arena.c"
 #include "resources.c"
 #include "game.h"
-#include "render_list.h"
+#include "render_list.c"
 
 typedef struct{
 	b32 initialized;
@@ -36,16 +36,12 @@ FRAME(frame){
 	SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, &(gs->resStatus), gs->renderList);
 
 	arena_clear(&(gs->renderList));
-	LIST_PUSH(&(gs->renderList), u32, RL_COLOR_CLEAR);
-	LIST_PUSH(&(gs->renderList), u32, RL_SET_CAMERA);
-	LIST_PUSH(&(gs->renderList), RLSetCamera, ((RLSetCamera){.pos = HMM_Vec2(0.0, 0.0), .size = HMM_Vec2(5.0, 5.0)}));
-	LIST_PUSH(&(gs->renderList), u32, RL_USE_TEXTURE);
-	LIST_PUSH(&(gs->renderList), RLUseTexture, ((RLUseTexture){.handle = basicSheet.handle, .xMul = basicSheet.xMul, .yMul = basicSheet.yMul}));
+	rl_color_clear(&(gs->renderList));
+	rl_set_camera(&(gs->renderList), HMM_Vec2(0.0, 0.0), HMM_Vec2(5.0, 5.0));
+	rl_use_texture(&(gs->renderList), basicSheet);
 	for(int y = -1; y <= 1; y++){
 		for(int x = -1; x <= 1; x++){
-			LIST_PUSH(&(gs->renderList), u32, RL_DRAW_SPRITE);
-			LIST_PUSH(&(gs->renderList), RLDrawSprite, ((RLDrawSprite){.pos = HMM_Vec2(x, y),
-				.size = HMM_Vec2(1.0, 1.0), .spritePos = HMM_Vec2(1.0, 1.0), .spriteSize = HMM_Vec2(1.0, 1.0)}));
+			rl_draw_sprite(&(gs->renderList), HMM_Vec2(x, y), HMM_Vec2(1.0, 1.0), HMM_Vec2(x+1, y+1), HMM_Vec2(1.0, 1.0));
 		}
 	}
 }

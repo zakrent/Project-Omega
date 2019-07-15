@@ -9,7 +9,7 @@ enum RLEntryType{
 	RL_COLOR_CLEAR,
 
 	RL_USE_TEXTURE,
-	RL_USE_SHADER,
+//	RL_USE_SHADER,
 
 	RL_SET_CAMERA,
 
@@ -35,5 +35,14 @@ typedef struct{
 	hmm_vec2 spritePos;
 	hmm_vec2 spriteSize;
 }RLDrawSprite;
+
+#ifndef SYSTEM_LAYER
+
+void rl_color_clear(MemoryArena* list);
+void rl_use_texture(MemoryArena* list, SpriteSheet sheet);
+void rl_set_camera(MemoryArena* list, hmm_vec2 pos, hmm_vec2 size);
+void rl_draw_sprite(MemoryArena* list, hmm_vec2 pos, hmm_vec2 size, hmm_vec2 spritePos, hmm_vec2 spriteSize);
+
+#endif
 
 #endif
