@@ -7,8 +7,9 @@ enum EntityType{
 	ENTITY_INVALID,
 
 	ENTITY_MAIN,
-	ENTITY_UNIT,
+	ENTITY_TANK_HULL,
 	ENTITY_TURRET,
+	ENTITY_TURRET_BASE,
 
 	COUNT_ENTITY_TYPE
 };
@@ -26,6 +27,7 @@ typedef struct{
 	EntityHandle master;
 	r32 rotation;
 	r32 spriteRotation;
+	hmm_vec2 rotationOffset;
 	hmm_vec2 pos;
 	hmm_vec2 size;
 	hmm_vec2 spritePos;
@@ -53,6 +55,7 @@ void entity_draw(EntitiesData *data, MemoryArena *renderList);
 enum EntityPrefabId{
 	EPI_INVALID,
 
+	EPI_TURRET,
 	EPI_TANK,
 
 	COUNT_EPI

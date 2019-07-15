@@ -10,8 +10,6 @@ System systemAPI;
 #include "resources.c"
 #include "game.h"
 #include "render_list.c"
-
-
 #include "entity.c"
 
 typedef struct{
@@ -34,7 +32,8 @@ FRAME(frame){
 		gs->renderList     = arena_sub_arena(&(gs->transientArena), MEGABYTES(8));
 		gs->resStatus      = (ResourceStatus){0};
 
-		entity_spawn_prefab(&(gs->entities), EPI_TANK, HMM_Vec2(0.0, 0.0), 0.0);
+		entity_spawn_prefab(&(gs->entities), EPI_TANK,   HMM_Vec2(0.0, 0.0), 0.0);
+		entity_spawn_prefab(&(gs->entities), EPI_TURRET, HMM_Vec2(0.0, 0.0), 0.0);
 
 		gs->initialized = true;
 		systemAPI.system_log(LOG_DEBUG, "GameState initialized");
@@ -51,7 +50,7 @@ FRAME(frame){
 	//rl_draw_sprite(&(gs->renderList), HMM_Vec2(0, 0), 3.14*systemAPI.time, HMM_Vec2(1.0, 1.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(1.0, 1.0));
 	for(int y = -15; y <= 15; y++){
 		for(int x = -15; x <= 15; x++){
-			rl_draw_sprite(&(gs->renderList), HMM_Vec2(x, y), 0.0, HMM_Vec2(1.0, 1.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(1.0, 1.0));
+			rl_draw_sprite(&(gs->renderList), HMM_Vec2(x, y), 0.0, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(1.0, 1.0));
 		}
 	}
 	entity_draw(&(gs->entities), &(gs->renderList));

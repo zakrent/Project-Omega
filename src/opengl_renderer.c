@@ -153,7 +153,8 @@ void opengl_render_list(MemoryArena *renderList, GLState state){
 				
 				hmm_m4 m = HMM_MultiplyMat4( HMM_Translate(HMM_Vec3(rlDrawSprite->pos.X, rlDrawSprite->pos.Y, 0.0)),
 						   HMM_MultiplyMat4( HMM_Rotate(rlDrawSprite->rotation, HMM_Vec3(0.0,0.0,1.0)),
-							  				 HMM_Scale(HMM_Vec3(rlDrawSprite->size.Width*0.5, rlDrawSprite->size.Height*0.5, 1.0))));
+						   HMM_MultiplyMat4( HMM_Translate(HMM_Vec3(rlDrawSprite->rotationOffset.X, rlDrawSprite->rotationOffset.Y, 0.0)),
+							                 HMM_Scale(HMM_Vec3(rlDrawSprite->size.Width*0.5, rlDrawSprite->size.Height*0.5, 1.0)))));
 				hmm_m4 mvp = HMM_MultiplyMat4(state.p, HMM_MultiplyMat4(state.v, m));
 				glUniformMatrix4fv(state.mvpLocation, 1, GL_FALSE, (GLfloat*)&mvp);
 
