@@ -2,12 +2,12 @@
 
 EntityHandle entity_new(EntitiesData *data, Entity newEntity){
 	for(int i = 0; i < MAX_ENTITIES; i++){
-		Entity *e = data->entities+i;
-		if(!e->valid){
-			*e = newEntity;
-			e->generation++;
-			e->valid = true;
-			return (EntityHandle){.index = i, .generation = e->generation};
+		EntityEntry *entry = data->entities+i;
+		if(!entry->valid){
+			entry->entity = newEntity;
+			entry->generation++;
+			entry->valid = true;
+			return (EntityHandle){.index = i, .generation = entry->generation};
 		}
 	}
 	assert(0);
@@ -15,9 +15,9 @@ EntityHandle entity_new(EntitiesData *data, Entity newEntity){
 
 Entity *entity_get(EntitiesData *data, EntityHandle handle){
 	assert(MAX_ENTITIES > handle.index);
-	Entity* e = data->entities+handle.index;
-	if(e->valid && e->generation == handle.generation){
-		return e;
+	EntityEntry* entry = data->entities+handle.index;
+	if(entry->valid && entry->generation == handle.generation){
+		return &entry->entity;
 	}
 	else{
 		return NULL;
@@ -36,29 +36,78 @@ r32 child_absolute_rotation(Entity* master, r32 childRotation){
 	return childRotation + master->rotation;
 }
 
-void entity_update(EntitiesData *data){
+void entity_update(EntitiesData *data, Map *map){
 	for(int i = 0; i < MAX_ENTITIES; i++){
-		Entity *e = data->entities+i;
-		Entity *m = NULL;
-		if(!e->isMaster){
-			m = entity_get(data, e->master);
-			if(!m){
+		EntityEntry *entry = data->entities+i;
+		if(entry->valid){
+			Entity *e = &entry->entity;
+			Entity *m = NULL;
+			EntityStats *s = entityStats+e->stats;
+			if(!e->isMaster){
+				m = entity_get(data, e->master);
+				if(!m){
+					e->valid = false;
+					continue;
+				}
+			}
+
+			if(e->health <= 0.0){
 				e->valid = false;
 			}
-		}
-		if(e->valid){
-			switch(e->type){
-				case ENTITY_TANK_HULL:
+			
+			switch(s->controller){
+				case CONTROLLER_PATH_FOLLOWER:
 					{
-						if(e->health <= 0.0){
-							e->valid = false;
+						switch(e->pathFollowerData.state){
+							//find waypoint
+							case 0:
+								{
+									if(e->pathFollowerData.waypointNumber > map->waypointCount - 1){
+										e->valid = false; 
+									}
+									else{
+										e->pathFollowerData.waypoint = map->waypoints[e->pathFollowerData.waypointNumber];
+										e->pathFollowerData.waypointNumber++;
+										e->pathFollowerData.state = 1;
+									}
+									break;
+								}
+							//rotate to waypoint
+							case 1:
+								{
+									hmm_v2 direction = HMM_SubtractVec2(e->pathFollowerData.waypoint, e->pos);
+									r32 distance = HMM_LengthVec2(direction);
+									r32 angleDelta = HMM_Clamp(-0.08, HMM_ATan2F(direction.Y, direction.X) - e->rotation, 0.08);
+									if(HMM_ABS(angleDelta) <= 0.001){
+										e->pathFollowerData.state = 2;
+									}
+									else{
+										e->rotation += angleDelta;
+									}
+									break;
+								}
+							//go to waypoint
+							case 2:
+								{
+									r32 distance = HMM_LengthVec2(HMM_SubtractVec2(e->pathFollowerData.waypoint, e->pos));
+									hmm_v2 vel = HMM_MultiplyMat4ByVec4(HMM_Rotate(e->rotation, HMM_Vec3(0.0, 0.0, 1.0)), HMM_Vec4(0.05, 0.0, 0.0, 1.0)).XY;
+									hmm_v2 newPos = HMM_AddVec2(e->pos, vel);
+									r32 newDistance = HMM_LengthVec2(HMM_SubtractVec2(e->pathFollowerData.waypoint, newPos));
+									if(newDistance > distance){
+										e->pathFollowerData.state = 0;
+									}
+									else{
+										e->pos = newPos;
+									}
+									break;
+								}
+							default:
+								assert(0);
+								break;
 						}
-						hmm_v2 vel = HMM_MultiplyMat4ByVec4(HMM_Rotate(e->rotation, HMM_Vec3(0.0, 0.0, 1.0)), HMM_Vec4(0.05, 0.0, 0.0, 1.0)).XY;
-						e->pos = HMM_AddVec2(e->pos, vel);
-						e->rotation += 0.05;
 						break;
 					}
-				case ENTITY_TURRET:
+				case CONTROLLER_SHOOTER:
 					{
 						hmm_v2 absolutePos = e->pos;
 						r32 absoluteRotation = e->rotation;
@@ -66,75 +115,81 @@ void entity_update(EntitiesData *data){
 							absolutePos = child_absolute_pos(m, absolutePos);
 							absoluteRotation = child_absolute_rotation(m, absoluteRotation);
 						}
-
-						if(!e->turretData.hasTarget){
+						if(!e->shooterData.hasTarget){
 							b32 foundTarget = false;
 							EntityHandle target;
 							r32 smallestDistance = 0.0;
 							for(int j = 0; j < MAX_ENTITIES; j++){
-								Entity *t = data->entities+j;
-								//Target types are always masters
-								if(t->valid && j != i && ((t->type == ENTITY_TANK_HULL && e->turretData.friendly) 
-										|| (t->type == ENTITY_TURRET_BASE && !e->turretData.friendly))){
-									r32 distance = HMM_LengthVec2(HMM_SubtractVec2(e->pos, t->pos));
-									if(!foundTarget || smallestDistance > distance){
-										smallestDistance = distance;
-										target.index = j;
-										target.generation = t->generation;
-										foundTarget = true;
+								EntityEntry *te = data->entities+j;
+								if(te->valid){
+									Entity *t = &te->entity;
+									EntityStats *ts = entityStats+t->stats;
+									//Target types are always masters
+									if(j != i && ((ts->type == ENTITY_TANK_HULL && s->shooterStats.friendly) 
+											|| (ts->type == ENTITY_TURRET_BASE && !s->shooterStats.friendly))){
+										r32 distance = HMM_LengthVec2(HMM_SubtractVec2(e->pos, t->pos));
+										if(!foundTarget || smallestDistance > distance){
+											smallestDistance = distance;
+											target.index = j;
+											target.generation = te->generation;
+											foundTarget = true;
+										}
 									}
 								}
 							}
 							if(foundTarget){
-								e->turretData.hasTarget = true;
-								e->turretData.target = target;
+								e->shooterData.hasTarget = true;
+								e->shooterData.target = target;
 							}
 						}
 						else{
-							Entity *t = entity_get(data, e->turretData.target);
+							Entity *t = entity_get(data, e->shooterData.target);
 							if(t){
 								hmm_v2 direction = HMM_SubtractVec2(t->pos, absolutePos);
 								r32 distance = HMM_LengthVec2(direction);
 								e->rotation += HMM_ATan2F(direction.Y, direction.X)-absoluteRotation;
-								if(e->turretData.firingDelay <= 0.0){
+								if(e->shooterData.firingDelayCounter <= 0.0){
 									EntityHandle ph = entity_spawn_prefab(data, EPI_PROJECTILE, absolutePos, absoluteRotation);
 									Entity* p = entity_get(data, ph);
-									p->projectileData.target = e->turretData.target;
-									p->projectileData.distanceToFly = distance;
-									e->turretData.firingDelay = 10.0;
+									p->projectileData.target = e->shooterData.target;
+									e->shooterData.firingDelayCounter = s->shooterStats.firingDelay;
 								}
 								else{
-									e->turretData.firingDelay -= 1.0;
+									e->shooterData.firingDelayCounter -= 1.0;
 								}
 							}
 							else{
-								e->turretData.hasTarget = false;
+								e->shooterData.hasTarget = false;
 							}
 						}
 						break;
 					}
-				case ENTITY_PROJECTILE:
+				case CONTROLLER_PROJECTILE:
 					{
-						r32 speed = 0.8;
-						hmm_v2 vel = HMM_MultiplyMat4ByVec4(HMM_Rotate(e->rotation, HMM_Vec3(0.0, 0.0, 1.0)), HMM_Vec4(speed, 0.0, 0.0, 1.0)).XY;
-						e->pos = HMM_AddVec2(e->pos, vel);
-						e->projectileData.distanceToFly -= speed;
-						if(e->projectileData.distanceToFly <= 0.0){
-							Entity *t = entity_get(data, e->projectileData.target);
-							if(t && t->valid && (t->type == ENTITY_TURRET_BASE || t->type == ENTITY_TANK_HULL)){
-								t->health -= e->projectileData.damage;
-							}
+						Entity *t = entity_get(data, e->projectileData.target);
+						if(!t){
 							e->valid = false;
+							continue;
+						}
+
+						hmm_v2 direction = HMM_SubtractVec2(t->pos, e->pos);
+						e->rotation = HMM_ATan2F(direction.Y, direction.X);
+
+						r32 distance = HMM_LengthVec2(direction);
+						hmm_v2 vel = HMM_MultiplyMat4ByVec4(HMM_Rotate(e->rotation, HMM_Vec3(0.0, 0.0, 1.0)), HMM_Vec4(0.8, 0.0, 0.0, 1.0)).XY;
+						hmm_v2 newPos = HMM_AddVec2(e->pos, vel);
+						r32 newDistance = HMM_LengthVec2(HMM_SubtractVec2(t->pos, newPos));
+						if(newDistance > distance){
+							t->health -= s->projectileStats.damage;
+							e->valid = false;
+						}
+						else{
+							e->pos = newPos;
 						}
 						break;
 					}
 				default:
-					{
-						if(e->health <= 0.0){
-							e->valid = false;
-						}
-						break;
-					}
+					break;
 			}
 		}
 	}
@@ -142,10 +197,12 @@ void entity_update(EntitiesData *data){
 
 void entity_draw(EntitiesData *data, MemoryArena *frameArena, RenderList *list){
 	for(int i = 0; i < MAX_ENTITIES; i++){
-		Entity *e = data->entities+i;
-		if(e->valid){
+		EntityEntry *entry = data->entities+i;
+		if(entry->valid){
+			Entity *e = &entry->entity;
+			EntityStats *s = entityStats+e->stats;
 			hmm_v2 absolutePos = e->pos;
-			r32 absoluteRotation = e->rotation+e->spriteRotation;
+			r32 absoluteRotation = e->rotation+s->spriteRotation;
 			if(!e->isMaster){
 				Entity *master = entity_get(data, e->master);
 				if(!master)
@@ -153,7 +210,7 @@ void entity_draw(EntitiesData *data, MemoryArena *frameArena, RenderList *list){
 				absolutePos = child_absolute_pos(master, absolutePos);
 				absoluteRotation = child_absolute_rotation(master, absoluteRotation);
 			}
-			rl_draw_sprite(frameArena, list, absolutePos, absoluteRotation, e->rotationOffset, e->size, e->spritePos, e->spriteSize);
+			rl_draw_sprite(frameArena, list, absolutePos, absoluteRotation, s->rotationOffset, s->size, s->spritePos, s->spriteSize);
 		}
 	}
 }
@@ -162,26 +219,22 @@ EntityHandle entity_spawn_prefab(EntitiesData *data, u32 prefabId, hmm_vec2 pos,
 	switch(prefabId){
 		case EPI_TURRET:
 			{
-			EntityHandle master = entity_new(data, (Entity){.type = ENTITY_TURRET_BASE, .isMaster = true, .pos = pos, .spriteRotation = 0.0, .rotation = rotation,
-				   	.size = HMM_Vec2(1.0,1.0), .spritePos = HMM_Vec2(20.0, 7.0), .spriteSize = HMM_Vec2(1.0, 1.0), .health = 100.0});
-			entity_new(data, (Entity){.type = ENTITY_TURRET, .master = master, .pos = HMM_Vec2(0.0,0.0), .spriteRotation = HMM_PI32*0.5, .rotation = 0.0,
-				   	.rotationOffset = HMM_Vec2(0.0, -0.2), .size = HMM_Vec2(1.0,1.0), .spritePos = HMM_Vec2(20.0, 10.0), .spriteSize = HMM_Vec2(1.0, 1.0), .turretData.friendly = true});
+			EntityHandle master = entity_new(data, (Entity){.stats = STATS_TURRET_1_BASE, .isMaster = true, .health = 100.0, .pos = pos, .rotation = rotation});
+			entity_new(data, (Entity){.stats = STATS_TURRET_1_TURRET, .master = master, .pos = HMM_Vec2(0.0, 0.0), .health = 1.0});
 			return master;
 			break;
 			}
 		case EPI_TANK:
 			{
-			EntityHandle master = entity_new(data, (Entity){.type = ENTITY_TANK_HULL, .isMaster = true, .pos = pos, .spriteRotation = 0.0, .rotation = rotation,
-				   	.size = HMM_Vec2(1.0,1.0), .spritePos = HMM_Vec2(16.0, 11.0), .spriteSize = HMM_Vec2(1.0, 1.0), .health = 10.0});
-			entity_new(data, (Entity){.type = ENTITY_TURRET, .master = master, .pos = HMM_Vec2(0.0,0.0), .spriteRotation = 0.0, .rotation = 3.14*0.25,
-				   	.rotationOffset = HMM_Vec2(0.08, 0.0), .size = HMM_Vec2(1.0,1.0), .spritePos = HMM_Vec2(16.0, 12.0), .spriteSize = HMM_Vec2(1.0, 1.0), .turretData.friendly = false});
+			//TODO: health from stats
+			EntityHandle master = entity_new(data, (Entity){.stats = STATS_TANK_1_HULL, .isMaster = true, .health = 100.0, .pos = pos, .rotation = rotation});
+			entity_new(data, (Entity){.stats = STATS_TANK_1_TURRET, .master = master, .pos = HMM_Vec2(0.0, 0.0), .health = 1.0});
 			return master;
 			break;
 			}
 		case EPI_PROJECTILE:
 			{
-				return entity_new(data, (Entity){.type = ENTITY_PROJECTILE, .isMaster = true, .pos = pos, .spriteRotation = 0.0, .rotation = rotation,
-					.size = HMM_Vec2(0.5, 0.5), .spritePos = HMM_Vec2(19.0, 11.0), .spriteSize = HMM_Vec2(1.0, 1.0), .projectileData.damage = 1.0});
+				return entity_new(data, (Entity){.stats = STATS_PROJECTILE_1, .isMaster = true, .health = 1.0, .pos = pos, .rotation = rotation});
 			}
 		default:
 			assert(0);

@@ -10,8 +10,10 @@ System systemAPI;
 #include "resources.c"
 #include "render_list.c"
 #include "game.h"
-#include "entity.c"
 #include "map.c"
+#include "entity.h"
+#include "entity_stats.h"
+#include "entity.c"
 
 typedef struct{
 	b32 initialized;
@@ -37,10 +39,11 @@ FRAME(frame){
 
 		gs->entities = arena_alloc_type(&gs->masterArena, Map);
 
-		entity_spawn_prefab(gs->entities, EPI_TANK,       HMM_Vec2(0.0, 0.0),   0.0);
 		entity_spawn_prefab(gs->entities, EPI_TURRET,     HMM_Vec2(0.0, 0.0),   0.0);
+#if 0
 		entity_spawn_prefab(gs->entities, EPI_TANK,       HMM_Vec2(-6.0, -1.0), 0.0);
-		entity_spawn_prefab(gs->entities, EPI_PROJECTILE, HMM_Vec2(1.0, 1.0),   1.0);
+		entity_spawn_prefab(gs->entities, EPI_PROJECTILE, HMM_Vec2(1.0, 1.0),   1.5);
+#endif
 
 		gs->resources = arena_alloc_type(&gs->transientArena, Resources);
 
@@ -48,15 +51,16 @@ FRAME(frame){
 		systemAPI.system_log(LOG_DEBUG, "GameState initialized");
 	}
 
-	arena_clear(&gs->frameArena);
-
 	static u64 counter = 0;
 	counter++;
-	if(counter % 60 == 0){
-		map_generate(gs->map, 0);
+	if(counter % 120 == 0){
+		entity_spawn_prefab(gs->entities, EPI_TANK, gs->map->waypoints[0], 0.0);
+		printf("M: %u\nT: %u\nF: %u\n\n", gs->masterArena.used, gs->transientArena.used, gs->frameArena.used);
 	}
 
-	entity_update(gs->entities);
+	arena_clear(&gs->frameArena);
+
+	entity_update(gs->entities, gs->map);
 
 	SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, gs->resources);
 

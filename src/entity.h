@@ -3,6 +3,7 @@
 
 #define MAX_ENTITIES 1024
 
+//TODO: do we really need entity type now?
 enum EntityType{
 	ENTITY_INVALID,
 
@@ -15,52 +16,64 @@ enum EntityType{
 	COUNT_ENTITY_TYPE
 };
 
+enum EntityController{
+	CONTROLLER_NONE,
+
+	CONTROLLER_PATH_FOLLOWER,
+	CONTROLLER_SHOOTER,
+	CONTROLLER_PROJECTILE,
+
+	COUNT_CONTROLLER
+};
+
 typedef struct{
 	u16 index;
 	u32 generation;
 } EntityHandle;
 
-struct Entity;
-typedef struct Entity Entity;
-
-struct Entity{
+typedef struct{
 	b32 valid;
-	u32 generation;
-	u32 type;
+	u32 stats;
 	b32 isMaster;
 	r32 health;
 	EntityHandle master;
 	hmm_vec2 pos;
-	hmm_vec2 rotationOffset;
-	hmm_vec2 size;
 	r32 rotation;
-	r32 spriteRotation;
-	hmm_vec2 spritePos;
-	hmm_vec2 spriteSize;
 	union{
 		struct{
-			b32 friendly;
+			u8 state;
+			u8 waypointNumber;
+			hmm_vec2 waypoint;
+		} pathFollowerData;
+
+		struct{
 			b32 hasTarget;
+			u32 firingDelayCounter;
 			EntityHandle target;
-			r32 firingDelay;
-		} turretData;
+		} shooterData;
 		
 		struct{
-			r32 distanceToFly;
-			r32 damage;
 			EntityHandle target;
 		} projectileData;
 	};
-};
+} Entity;
 
 typedef struct{
-	Entity entities[MAX_ENTITIES];
+	u32 generation;
+	union{
+		b32 valid;
+		Entity entity;
+	};
+} EntityEntry;
+
+typedef struct{
+	EntityEntry entities[MAX_ENTITIES];
 	u16 lastEntityIndex;
 } EntitiesData;
 
 EntityHandle entity_new(EntitiesData *data, Entity newEntity);
 Entity *entity_get(EntitiesData *data, EntityHandle handle);
-void entity_update(EntitiesData *data);
+void entity_update(EntitiesData *data, Map *map);
 void entity_draw(EntitiesData *data, MemoryArena *frameArena, RenderList *list);
 
 enum EntityPrefabId{
