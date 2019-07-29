@@ -39,10 +39,20 @@ r32 child_absolute_rotation(Entity* master, r32 childRotation){
 void entity_update(EntitiesData *data){
 	for(int i = 0; i < MAX_ENTITIES; i++){
 		Entity *e = data->entities+i;
+		Entity *m = NULL;
+		if(!e->isMaster){
+			m = entity_get(data, e->master);
+			if(!m){
+				e->valid = false;
+			}
+		}
 		if(e->valid){
 			switch(e->type){
 				case ENTITY_TANK_HULL:
 					{
+						if(e->health <= 0.0){
+							e->valid = false;
+						}
 						hmm_v2 vel = HMM_MultiplyMat4ByVec4(HMM_Rotate(e->rotation, HMM_Vec3(0.0, 0.0, 1.0)), HMM_Vec4(0.05, 0.0, 0.0, 1.0)).XY;
 						e->pos = HMM_AddVec2(e->pos, vel);
 						e->rotation += 0.05;
@@ -53,9 +63,8 @@ void entity_update(EntitiesData *data){
 						hmm_v2 absolutePos = e->pos;
 						r32 absoluteRotation = e->rotation;
 						if(!e->isMaster){
-							Entity *master = data->entities+e->master.index;
-							absolutePos = child_absolute_pos(master, absolutePos);
-							absoluteRotation = child_absolute_rotation(master, absoluteRotation);
+							absolutePos = child_absolute_pos(m, absolutePos);
+							absoluteRotation = child_absolute_rotation(m, absoluteRotation);
 						}
 
 						if(!e->turretData.hasTarget){
@@ -85,9 +94,13 @@ void entity_update(EntitiesData *data){
 							Entity *t = entity_get(data, e->turretData.target);
 							if(t){
 								hmm_v2 direction = HMM_SubtractVec2(t->pos, absolutePos);
+								r32 distance = HMM_LengthVec2(direction);
 								e->rotation += HMM_ATan2F(direction.Y, direction.X)-absoluteRotation;
 								if(e->turretData.firingDelay <= 0.0){
-									entity_spawn_prefab(data, EPI_PROJECTILE, absolutePos, absoluteRotation);
+									EntityHandle ph = entity_spawn_prefab(data, EPI_PROJECTILE, absolutePos, absoluteRotation);
+									Entity* p = entity_get(data, ph);
+									p->projectileData.target = e->turretData.target;
+									p->projectileData.distanceToFly = distance;
 									e->turretData.firingDelay = 10.0;
 								}
 								else{
@@ -98,15 +111,30 @@ void entity_update(EntitiesData *data){
 								e->turretData.hasTarget = false;
 							}
 						}
+						break;
 					}
-					break;
 				case ENTITY_PROJECTILE:
 					{
-						hmm_v2 vel = HMM_MultiplyMat4ByVec4(HMM_Rotate(e->rotation, HMM_Vec3(0.0, 0.0, 1.0)), HMM_Vec4(0.2, 0.0, 0.0, 1.0)).XY;
+						r32 speed = 0.8;
+						hmm_v2 vel = HMM_MultiplyMat4ByVec4(HMM_Rotate(e->rotation, HMM_Vec3(0.0, 0.0, 1.0)), HMM_Vec4(speed, 0.0, 0.0, 1.0)).XY;
 						e->pos = HMM_AddVec2(e->pos, vel);
+						e->projectileData.distanceToFly -= speed;
+						if(e->projectileData.distanceToFly <= 0.0){
+							Entity *t = entity_get(data, e->projectileData.target);
+							if(t && t->valid && (t->type == ENTITY_TURRET_BASE || t->type == ENTITY_TANK_HULL)){
+								t->health -= e->projectileData.damage;
+							}
+							e->valid = false;
+						}
+						break;
 					}
 				default:
-					break;
+					{
+						if(e->health <= 0.0){
+							e->valid = false;
+						}
+						break;
+					}
 			}
 		}
 	}
@@ -119,7 +147,9 @@ void entity_draw(EntitiesData *data, MemoryArena *renderList){
 			hmm_v2 absolutePos = e->pos;
 			r32 absoluteRotation = e->rotation+e->spriteRotation;
 			if(!e->isMaster){
-				Entity *master = data->entities+e->master.index;
+				Entity *master = entity_get(data, e->master);
+				if(!master)
+					continue;
 				absolutePos = child_absolute_pos(master, absolutePos);
 				absoluteRotation = child_absolute_rotation(master, absoluteRotation);
 			}
@@ -133,7 +163,7 @@ EntityHandle entity_spawn_prefab(EntitiesData *data, u32 prefabId, hmm_vec2 pos,
 		case EPI_TURRET:
 			{
 			EntityHandle master = entity_new(data, (Entity){.type = ENTITY_TURRET_BASE, .isMaster = true, .pos = pos, .spriteRotation = 0.0, .rotation = rotation,
-				   	.size = HMM_Vec2(1.0,1.0), .spritePos = HMM_Vec2(20.0, 7.0), .spriteSize = HMM_Vec2(1.0, 1.0)});
+				   	.size = HMM_Vec2(1.0,1.0), .spritePos = HMM_Vec2(20.0, 7.0), .spriteSize = HMM_Vec2(1.0, 1.0), .health = 100.0});
 			entity_new(data, (Entity){.type = ENTITY_TURRET, .master = master, .pos = HMM_Vec2(0.0,0.0), .spriteRotation = HMM_PI32*0.5, .rotation = 0.0,
 				   	.rotationOffset = HMM_Vec2(0.0, -0.2), .size = HMM_Vec2(1.0,1.0), .spritePos = HMM_Vec2(20.0, 10.0), .spriteSize = HMM_Vec2(1.0, 1.0), .turretData.friendly = true});
 			return master;
@@ -142,7 +172,7 @@ EntityHandle entity_spawn_prefab(EntitiesData *data, u32 prefabId, hmm_vec2 pos,
 		case EPI_TANK:
 			{
 			EntityHandle master = entity_new(data, (Entity){.type = ENTITY_TANK_HULL, .isMaster = true, .pos = pos, .spriteRotation = 0.0, .rotation = rotation,
-				   	.size = HMM_Vec2(1.0,1.0), .spritePos = HMM_Vec2(16.0, 11.0), .spriteSize = HMM_Vec2(1.0, 1.0), .unitData.health = 100.0});
+				   	.size = HMM_Vec2(1.0,1.0), .spritePos = HMM_Vec2(16.0, 11.0), .spriteSize = HMM_Vec2(1.0, 1.0), .health = 10.0});
 			entity_new(data, (Entity){.type = ENTITY_TURRET, .master = master, .pos = HMM_Vec2(0.0,0.0), .spriteRotation = 0.0, .rotation = 3.14*0.25,
 				   	.rotationOffset = HMM_Vec2(0.08, 0.0), .size = HMM_Vec2(1.0,1.0), .spritePos = HMM_Vec2(16.0, 12.0), .spriteSize = HMM_Vec2(1.0, 1.0), .turretData.friendly = false});
 			return master;
@@ -151,7 +181,7 @@ EntityHandle entity_spawn_prefab(EntitiesData *data, u32 prefabId, hmm_vec2 pos,
 		case EPI_PROJECTILE:
 			{
 				return entity_new(data, (Entity){.type = ENTITY_PROJECTILE, .isMaster = true, .pos = pos, .spriteRotation = 0.0, .rotation = rotation,
-					.size = HMM_Vec2(0.5, 0.5), .spritePos = HMM_Vec2(19.0, 11.0), .spriteSize = HMM_Vec2(1.0, 1.0)});
+					.size = HMM_Vec2(0.5, 0.5), .spritePos = HMM_Vec2(19.0, 11.0), .spriteSize = HMM_Vec2(1.0, 1.0), .projectileData.damage = 1.0});
 			}
 		default:
 			assert(0);

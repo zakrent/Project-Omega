@@ -28,6 +28,7 @@ typedef struct Entity{
 	u32 generation;
 	u32 type;
 	b32 isMaster;
+	r32 health;
 	EntityHandle master;
 	hmm_vec2 pos;
 	hmm_vec2 rotationOffset;
@@ -38,15 +39,17 @@ typedef struct Entity{
 	hmm_vec2 spriteSize;
 	union{
 		struct{
-			r32 health;
-		} unitData;
-
-		struct{
 			b32 friendly;
 			b32 hasTarget;
 			EntityHandle target;
 			r32 firingDelay;
 		} turretData;
+		
+		struct{
+			r32 distanceToFly;
+			r32 damage;
+			EntityHandle target;
+		} projectileData;
 	};
 } Entity;
 

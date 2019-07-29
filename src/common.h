@@ -25,4 +25,7 @@ enum {false, true};
 
 #define assert(a) if(!a){*((u8*)0) = 5;}
 
+r32 randf(r32 min, r32 max);
+#define randfu() randf(0.0, 1.0)
+
 #endif
