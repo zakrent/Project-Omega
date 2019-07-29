@@ -14,6 +14,6 @@ typedef struct{
 } GLState;
 
 GLState opengl_state_init();
-void opengl_render_list(MemoryArena *renderList, GLState state);
+void opengl_render_list(RenderList *renderList, GLState state);
 
 #endif

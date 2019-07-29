@@ -9,11 +9,9 @@ typedef struct{
 
 MemoryArena arena_init(void* base, u64 size);
 MemoryArena arena_sub_arena(MemoryArena *arena, u64 size);
-void *arena_push(MemoryArena *arena, u64 size);
-void *arena_push_no_align(MemoryArena *arena, u64 size);
-void arena_clear(MemoryArena *arena);
+void *arena_alloc(MemoryArena *a, u64 size);
+void arena_clear(MemoryArena *a);
 
-#define arena_push_struct(arena, s) arena_push(arena, sizeof(s))
-#define arena_push_struct_no_align(arena, s) arena_push_no_align(arena, sizeof(s))
+#define arena_alloc_type(arena, type) arena_alloc(arena, sizeof(type))
 
 #endif

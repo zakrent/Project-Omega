@@ -14,25 +14,12 @@ MemoryArena arena_sub_arena(MemoryArena *a, u64 size){
 #ifndef SYSTEM_LAYER
 	systemAPI.system_log(LOG_DEBUG, "New memory subarena of size %u bytes created", size);
 #endif
-	void *newBase = arena_push(a, size);
+	void *newBase = arena_alloc(a, size);
 	MemoryArena sub = (MemoryArena){.base = newBase, .size = size, .used = 0};
 	return sub;
 }
 
-void *arena_push(MemoryArena *a, u64 size){
-	void *firstFreeByte = a->base + a->used;
-	//Align byte to 32 bit boundry
-	void *alignedByte = firstFreeByte;
-	if((u64)alignedByte % 4 != 0){
-		alignedByte += 4-((u64)alignedByte % 4);
-	}
-	u64 realSize = size+alignedByte-firstFreeByte;
-	a->used += realSize;
-	assert(a->size > a->used);	
-	return alignedByte;
-}
-
-void *arena_push_no_align(MemoryArena *a, u64 size){
+void *arena_alloc(MemoryArena *a, u64 size){
 	void *firstFreeByte = a->base + a->used;
 	a->used += size;
 	assert(a->size > a->used);	

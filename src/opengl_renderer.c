@@ -112,76 +112,72 @@ GLState opengl_state_init(){
 	return state;
 }
 
-void opengl_render_list(MemoryArena *renderList, GLState state){
+void opengl_render_list(RenderList *renderList, GLState state){
 	r32 windowSizeData[4];
 	glGetFloatv(GL_VIEWPORT, windowSizeData);
 	r32 aspectRatio = windowSizeData[2]/windowSizeData[3];
 	state.p = HMM_Orthographic(-1.0*aspectRatio, 1.0*aspectRatio, 1.0, -1.0, 0.0, 100.0);
 
 	glUseProgram(state.shader);
-	u64 offset = 0;
-	while(offset < renderList->used){
-		u32 *entryType = (renderList->base+offset);
-		offset += sizeof(u32);
-		switch(*entryType){
+
+	RLEntryHeader *header = renderList->first;
+	while(header){
+		switch(header->type){
 			case RL_COLOR_CLEAR:
 				{
-				glClear(GL_COLOR_BUFFER_BIT);
-				break;
+					glClear(GL_COLOR_BUFFER_BIT);
+					break;
 				}
 			case RL_USE_TEXTURE:
 				{
-				RLUseTexture *rlUseTexture = (renderList->base+offset);
-				offset += sizeof(RLUseTexture);
-				glBindTexture(GL_TEXTURE_2D, rlUseTexture->handle);
-				state.texXMul = rlUseTexture->xMul;
-				state.texYMul = rlUseTexture->yMul;
-				break;
+					RLUseTexture *rlUseTexture = header->data;
+					glBindTexture(GL_TEXTURE_2D, rlUseTexture->handle);
+					state.texXMul = rlUseTexture->xMul;
+					state.texYMul = rlUseTexture->yMul;
+					break;
 				}
 			case RL_SET_CAMERA:
 				{
-				RLSetCamera *rlSetCamera = (renderList->base+offset);
-				offset += sizeof(RLSetCamera);
-				state.v = HMM_MultiplyMat4(HMM_Translate(HMM_Vec3(rlSetCamera->pos.X, rlSetCamera->pos.Y, 0.0)),
-					   	HMM_Scale(HMM_Vec3(1.0/rlSetCamera->size.Width, 1.0/rlSetCamera->size.Height, 1.0)));
-				break;
+					RLSetCamera *rlSetCamera = header->data;
+					state.v = HMM_MultiplyMat4(HMM_Translate(HMM_Vec3(rlSetCamera->pos.X, rlSetCamera->pos.Y, 0.0)),
+							HMM_Scale(HMM_Vec3(1.0/rlSetCamera->size.Width, 1.0/rlSetCamera->size.Height, 1.0)));
+					break;
 				}
 			case RL_DRAW_SPRITE:
 				{
-				RLDrawSprite *rlDrawSprite = (renderList->base+offset);
-				offset += sizeof(RLDrawSprite);
-				
-				hmm_m4 m = HMM_MultiplyMat4( HMM_Translate(HMM_Vec3(rlDrawSprite->pos.X, rlDrawSprite->pos.Y, 0.0)),
-						   HMM_MultiplyMat4( HMM_Rotate(rlDrawSprite->rotation, HMM_Vec3(0.0,0.0,1.0)),
-						   HMM_MultiplyMat4( HMM_Translate(HMM_Vec3(rlDrawSprite->rotationOffset.X, rlDrawSprite->rotationOffset.Y, 0.0)),
-							                 HMM_Scale(HMM_Vec3(rlDrawSprite->size.Width*0.5, rlDrawSprite->size.Height*0.5, 1.0)))));
-				hmm_m4 mvp = HMM_MultiplyMat4(state.p, HMM_MultiplyMat4(state.v, m));
-				glUniformMatrix4fv(state.mvpLocation, 1, GL_FALSE, (GLfloat*)&mvp);
+					RLDrawSprite *rlDrawSprite = header->data;
+					
+					hmm_m4 m = HMM_MultiplyMat4( HMM_Translate(HMM_Vec3(rlDrawSprite->pos.X, rlDrawSprite->pos.Y, 0.0)),
+							   HMM_MultiplyMat4( HMM_Rotate(rlDrawSprite->rotation, HMM_Vec3(0.0,0.0,1.0)),
+							   HMM_MultiplyMat4( HMM_Translate(HMM_Vec3(rlDrawSprite->rotationOffset.X, rlDrawSprite->rotationOffset.Y, 0.0)),
+												 HMM_Scale(HMM_Vec3(rlDrawSprite->size.Width*0.5, rlDrawSprite->size.Height*0.5, 1.0)))));
+					hmm_m4 mvp = HMM_MultiplyMat4(state.p, HMM_MultiplyMat4(state.v, m));
+					glUniformMatrix4fv(state.mvpLocation, 1, GL_FALSE, (GLfloat*)&mvp);
 
-				float texturePoints[] = {
-					0.0, 0.0,
-					1.0, 0.0,
-					1.0, 1.0,
-					0.0, 0.0,
-					1.0, 1.0,
-					0.0, 1.0
-				};
-				for(int i = 0; i < 6; i++){
-					texturePoints[i*2]   *= rlDrawSprite->spriteSize.X*state.texXMul;
-					texturePoints[i*2+1] *= rlDrawSprite->spriteSize.Y*state.texYMul;
-					texturePoints[i*2]   += rlDrawSprite->spritePos.X*state.texXMul;
-					texturePoints[i*2+1] += rlDrawSprite->spritePos.Y*state.texYMul;
-				}
+					float texturePoints[] = {
+						0.0, 0.0,
+						1.0, 0.0,
+						1.0, 1.0,
+						0.0, 0.0,
+						1.0, 1.0,
+						0.0, 1.0
+					};
+					for(int i = 0; i < 6; i++){
+						texturePoints[i*2]   *= rlDrawSprite->spriteSize.X*state.texXMul;
+						texturePoints[i*2+1] *= rlDrawSprite->spriteSize.Y*state.texYMul;
+						texturePoints[i*2]   += rlDrawSprite->spritePos.X*state.texXMul;
+						texturePoints[i*2+1] += rlDrawSprite->spritePos.Y*state.texYMul;
+					}
 
-				glBindBuffer(GL_ARRAY_BUFFER, state.textureVBO);
-				glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), texturePoints, GL_STREAM_DRAW);
+					glBindBuffer(GL_ARRAY_BUFFER, state.textureVBO);
+					glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), texturePoints, GL_STREAM_DRAW);
 
-				glDrawArrays(GL_TRIANGLES, 0, 6);
-				break;
+					glDrawArrays(GL_TRIANGLES, 0, 6);
+					break;
 				}
 			default:
-				assert(0);
 				break;
 		}
+		header = header->nextEntry;
 	}
 }

@@ -17,6 +17,7 @@
 #include "common.h"
 #include "system.h"
 #include "memory_arena.c"
+#include "render_list.h"
 #include "opengl_renderer.c"
 #include "game.h"
 
@@ -120,10 +121,10 @@ int main(){
 
 	//Allocate game memory
 	GameMemory memory;
-	memory.permanentMemory = mmap((void*)TERABYTES(10), MEGABYTES(256), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-	memory.transientMemory = mmap((void*)TERABYTES(11), MEGABYTES(512), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-	memory.permanentMemorySize = MEGABYTES(256);
-	memory.transientMemorySize = MEGABYTES(512);
+	memory.permanentMemory = mmap((void*)TERABYTES(10), MEGABYTES(16), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	memory.transientMemory = mmap((void*)TERABYTES(11), MEGABYTES(16), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	memory.permanentMemorySize = MEGABYTES(16);
+	memory.transientMemorySize = MEGABYTES(16);
 	if(!memory.permanentMemory || !memory.transientMemory){
 		die("Could not allocate game memory.");
 	}
@@ -155,7 +156,7 @@ int main(){
 	while (!glfwWindowShouldClose(window)){
 		systemAPI.time = frameStart;
 
-		MemoryArena *renderList;
+		RenderList *renderList;
 		frame(memory, systemAPI, &renderList);
 		
 		opengl_render_list(renderList, glState);

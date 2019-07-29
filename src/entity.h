@@ -23,7 +23,7 @@ typedef struct{
 struct Entity;
 typedef struct Entity Entity;
 
-typedef struct Entity{
+struct Entity{
 	b32 valid;
 	u32 generation;
 	u32 type;
@@ -51,7 +51,7 @@ typedef struct Entity{
 			EntityHandle target;
 		} projectileData;
 	};
-} Entity;
+};
 
 typedef struct{
 	Entity entities[MAX_ENTITIES];
@@ -61,7 +61,7 @@ typedef struct{
 EntityHandle entity_new(EntitiesData *data, Entity newEntity);
 Entity *entity_get(EntitiesData *data, EntityHandle handle);
 void entity_update(EntitiesData *data);
-void entity_draw(EntitiesData *data, MemoryArena *renderList);
+void entity_draw(EntitiesData *data, MemoryArena *frameArena, RenderList *list);
 
 enum EntityPrefabId{
 	EPI_INVALID,

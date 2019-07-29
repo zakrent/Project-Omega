@@ -36,12 +36,13 @@ typedef struct{
 	u32 gammaBlue;       /* Gamma blue coordinate scale value */
 } __attribute__((packed)) BMPHeader;
 
-Shader resources_get_shader(u16 type, ResourceStatus status, MemoryArena tempArena){
+Shader resources_get_shader(u16 type, Resources *res){
+	assert(0);
 }
 
-SpriteSheet resources_get_sprite_sheet(u16 type, ResourceStatus *status, MemoryArena tempArena){
-	if(status->spriteSheets[type].valid){
-		return status->spriteSheets[type];
+SpriteSheet resources_get_sprite_sheet(u16 type, Resources *res){
+	if(res->spriteSheets[type].valid){
+		return res->spriteSheets[type];
 	}
 	systemAPI.system_log(LOG_DEBUG, "Loading sprite sheet id: %u", type);
 	File file;
@@ -58,7 +59,7 @@ SpriteSheet resources_get_sprite_sheet(u16 type, ResourceStatus *status, MemoryA
 		systemAPI.system_close_file(file);
 	}
 	else{
-		status->spriteSheets[type] = (SpriteSheet){
+		res->spriteSheets[type] = (SpriteSheet){
 			.valid = true,
 			.handle = systemAPI.system_generate_texture(file.content + header->bitmapOffset, header->width, header->height),
 			.width = header->width,
@@ -67,5 +68,5 @@ SpriteSheet resources_get_sprite_sheet(u16 type, ResourceStatus *status, MemoryA
 			.yMul = 64.0/header->height,
 		};
 	}
-	return status->spriteSheets[type];
+	return res->spriteSheets[type];
 }

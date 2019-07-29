@@ -103,7 +103,7 @@ void map_generate(Map* map, u16 seed){
 	//TODO: decals?
 }
 
-void map_draw(Map *map, MemoryArena *renderList){
+void map_draw(Map *map, MemoryArena *frameArena, RenderList* list){
 	for(int x = 0; x < MAP_SIZE_X; x++){
 		for(int y = 0; y < MAP_SIZE_Y; y++){
 			u8 spriteX = 1.0;
@@ -129,10 +129,10 @@ void map_draw(Map *map, MemoryArena *renderList){
 					spriteY = 9 + yDiff;
 				}
 			}
-			rl_draw_sprite(renderList, HMM_Vec2(x-MAP_SIZE_X*0.5+0.5, y-MAP_SIZE_Y*0.5+0.5), 0.0, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(spriteX, spriteY), HMM_Vec2(1.0, 1.0));
+			rl_draw_sprite(frameArena, list, HMM_Vec2(x-MAP_SIZE_X*0.5+0.5, y-MAP_SIZE_Y*0.5+0.5), 0.0, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(spriteX, spriteY), HMM_Vec2(1.0, 1.0));
 		}
 	}
 	for(int i = 0; i < map->waypointCount; i++){
-		rl_draw_sprite(renderList, map->waypoints[i], 0.0, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(22.0, 0.0), HMM_Vec2(1.0, 1.0));
+		rl_draw_sprite(frameArena, list, map->waypoints[i], 0.0, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(22.0, 0.0), HMM_Vec2(1.0, 1.0));
 	}
 }

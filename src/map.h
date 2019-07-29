@@ -32,6 +32,6 @@ typedef struct{
 } Map;
 
 void map_generate(Map* map, u16 seed);
-void map_draw(Map *map, MemoryArena *renderList);
+void map_draw(Map *map, MemoryArena *frameArena, RenderList* list);
 
 #endif

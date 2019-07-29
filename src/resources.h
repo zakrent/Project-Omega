@@ -34,9 +34,9 @@ typedef struct{
 typedef struct{
 	Shader shaders[COUNT_SHADERS];
 	SpriteSheet spriteSheets[COUNT_SS];
-} ResourceStatus;
+} Resources;
 
-Shader  resources_get_shader(u16 type, ResourceStatus status, MemoryArena tempArena);
-SpriteSheet resources_get_sprite_sheet(u16 type, ResourceStatus *status, MemoryArena tempArena);
+Shader  resources_get_shader(u16 type, Resources *res);
+SpriteSheet resources_get_sprite_sheet(u16 type, Resources *res);
 
 #endif

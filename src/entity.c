@@ -140,7 +140,7 @@ void entity_update(EntitiesData *data){
 	}
 }
 
-void entity_draw(EntitiesData *data, MemoryArena *renderList){
+void entity_draw(EntitiesData *data, MemoryArena *frameArena, RenderList *list){
 	for(int i = 0; i < MAX_ENTITIES; i++){
 		Entity *e = data->entities+i;
 		if(e->valid){
@@ -153,7 +153,7 @@ void entity_draw(EntitiesData *data, MemoryArena *renderList){
 				absolutePos = child_absolute_pos(master, absolutePos);
 				absoluteRotation = child_absolute_rotation(master, absoluteRotation);
 			}
-			rl_draw_sprite(renderList, absolutePos, absoluteRotation, e->rotationOffset, e->size, e->spritePos, e->spriteSize);
+			rl_draw_sprite(frameArena, list, absolutePos, absoluteRotation, e->rotationOffset, e->size, e->spritePos, e->spriteSize);
 		}
 	}
 }
