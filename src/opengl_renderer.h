@@ -7,8 +7,13 @@ typedef struct{
 	r32 texXMul;
 	r32 texYMul;
 	GLuint mainVAO;
-	GLuint shader;
+	GLuint basicShader;
+	GLuint spriteShader;
 	GLint mvpLocation;
+	GLint sizeXLocation;
+	GLint sizeYLocation;
+	GLint posXLocation;
+	GLint posYLocation;
 	hmm_m4 v;
 	hmm_m4 p;
 } GLState;

@@ -5,6 +5,7 @@ enum SpriteSheets{
 	SS_INVALID,
 
 	SS_BASIC,
+	SS_FONT,
 
 	COUNT_SS
 };

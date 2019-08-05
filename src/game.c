@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <stdarg.h>
+#include <x86intrin.h>
 #define HANDMADE_MATH_IMPLEMENTATION
 #include "HandmadeMath.h"
 #include "common.c"
@@ -9,6 +11,7 @@ System systemAPI;
 #include "memory_arena.c"
 #include "resources.c"
 #include "render_list.c"
+#include "ui.c"
 #include "game.h"
 #include "map.c"
 #include "entity.h"
@@ -55,7 +58,6 @@ FRAME(frame){
 	counter++;
 	if(counter % 120 == 0){
 		entity_spawn_prefab(gs->entities, EPI_TANK, gs->map->waypoints[0], 0.0);
-		printf("M: %u\nT: %u\nF: %u\n\n", gs->masterArena.used, gs->transientArena.used, gs->frameArena.used);
 	}
 
 	arena_clear(&gs->frameArena);
@@ -63,15 +65,31 @@ FRAME(frame){
 	entity_update(gs->entities, gs->map);
 
 	SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, gs->resources);
+	SpriteSheet fontSheet  = resources_get_sprite_sheet(SS_FONT,  gs->resources);
 
 	RenderList *list = arena_alloc_type(&gs->frameArena, RenderList);
 	*list = (RenderList){0};
 
 	rl_color_clear(&gs->frameArena, list);
+
 	rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(16.0, 16.0));
 	rl_use_texture(&gs->frameArena, list, basicSheet);
 	map_draw(gs->map, &gs->frameArena, list);
 	entity_draw(gs->entities, &gs->frameArena, list);
+	
+	rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0));
+	rl_use_texture(&gs->frameArena, list, fontSheet);
+
+	static r32 lastTime;
+	static r32 highestTime;
+	if(systemAPI.time - lastTime > highestTime && counter > 2)
+		highestTime = systemAPI.time - lastTime;
+	ui_draw_string(&gs->frameArena, list, -1.75, -0.96, 4.0, "Frame time               %10.2f ms", (systemAPI.time-lastTime)*1000.0);
+	ui_draw_string(&gs->frameArena, list, -1.75, -0.92, 4.0, "Highest frame time       %10.2f ms", highestTime*1000.0);
+	ui_draw_string(&gs->frameArena, list, -1.75, -0.88, 4.0, "Master arena             %10u bytes used", gs->masterArena.reallyUsed);
+	ui_draw_string(&gs->frameArena, list, -1.75, -0.84, 4.0, "Transient arena          %10u bytes used", gs->transientArena.reallyUsed);
+	ui_draw_string(&gs->frameArena, list, -1.75, -0.80, 4.0, "Frame arena              %10u bytes used", gs->frameArena.reallyUsed);
+	lastTime = systemAPI.time;
 
 	*_renderList = list;
 }
