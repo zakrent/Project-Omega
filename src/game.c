@@ -84,11 +84,11 @@ FRAME(frame){
 	static r32 highestTime;
 	if(systemAPI.time - lastTime > highestTime && counter > 2)
 		highestTime = systemAPI.time - lastTime;
-	ui_draw_string(&gs->frameArena, list, -1.75, -0.96, 4.0, "Frame time               %10.2f ms", (systemAPI.time-lastTime)*1000.0);
-	ui_draw_string(&gs->frameArena, list, -1.75, -0.92, 4.0, "Highest frame time       %10.2f ms", highestTime*1000.0);
-	ui_draw_string(&gs->frameArena, list, -1.75, -0.88, 4.0, "Master arena             %10u bytes used", gs->masterArena.reallyUsed);
-	ui_draw_string(&gs->frameArena, list, -1.75, -0.84, 4.0, "Transient arena          %10u bytes used", gs->transientArena.reallyUsed);
-	ui_draw_string(&gs->frameArena, list, -1.75, -0.80, 4.0, "Frame arena              %10u bytes used", gs->frameArena.reallyUsed);
+	ui_draw_string(&gs->frameArena, list, -1.75, -0.96, 5.0, "Frame time               %10.2f ms", (systemAPI.time-lastTime)*1000.0);
+	ui_draw_string(&gs->frameArena, list, -1.75, -0.92, 5.0, "Highest frame time       %10.2f ms", highestTime*1000.0);
+	ui_draw_string(&gs->frameArena, list, -1.75, -0.88, 5.0, "Master arena             %10u bytes used", gs->masterArena.reallyUsed);
+	ui_draw_string(&gs->frameArena, list, -1.75, -0.84, 5.0, "Transient arena          %10u bytes used", gs->transientArena.reallyUsed);
+	ui_draw_string(&gs->frameArena, list, -1.75, -0.80, 5.0, "Frame arena              %10u bytes used", gs->frameArena.reallyUsed);
 	lastTime = systemAPI.time;
 
 	*_renderList = list;

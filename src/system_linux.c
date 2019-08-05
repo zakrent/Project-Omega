@@ -175,6 +175,10 @@ int main(){
 			//POSIX.1-2001 deprecated this function but linux still supports it
 			usleep((DT-frameTime)*10e5);
 		}
+		else{
+			//Frame took too long
+			printf("FRAME TOO LONG!\n");
+		}
 		frameStart = glfwGetTime();
 	}
 	return 0;

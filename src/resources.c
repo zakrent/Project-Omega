@@ -54,7 +54,7 @@ SpriteSheet resources_get_sprite_sheet(u16 type, Resources *res){
 			break;
 		case SS_FONT:
 			file = systemAPI.system_open_file("./res/font.bmp");
-			xMulBase = 32;
+			xMulBase = 16;
 			yMulBase = 32;
 			break;
 		default:
