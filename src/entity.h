@@ -3,19 +3,6 @@
 
 #define MAX_ENTITIES 1024
 
-//TODO: do we really need entity type now?
-enum EntityType{
-	ENTITY_INVALID,
-
-	ENTITY_TANK_HULL,
-	ENTITY_TURRET,
-	ENTITY_TURRET_BASE,
-
-	ENTITY_PROJECTILE,
-
-	COUNT_ENTITY_TYPE
-};
-
 enum EntityController{
 	CONTROLLER_NONE,
 

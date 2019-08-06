@@ -125,8 +125,8 @@ void entity_update(EntitiesData *data, Map *map){
 									Entity *t = &te->entity;
 									EntityStats *ts = entityStats+t->stats;
 									//Target types are always masters
-									if(j != i && ((ts->type == ENTITY_TANK_HULL && s->shooterStats.friendly) 
-											|| (ts->type == ENTITY_TURRET_BASE && !s->shooterStats.friendly))){
+									if(j != i && ((ts->side == ES_ENEMY && s->shooterStats.friendly) 
+											|| (ts->side == ES_FRIENDLY && !s->shooterStats.friendly))){
 										r32 distance = HMM_LengthVec2(HMM_SubtractVec2(e->pos, t->pos));
 										if(!foundTarget || smallestDistance > distance){
 											smallestDistance = distance;
