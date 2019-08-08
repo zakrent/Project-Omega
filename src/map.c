@@ -105,35 +105,45 @@ void map_generate(Map* map, u16 seed){
 
 void map_draw(Map *map, MemoryArena *frameArena, RenderList* list){
 	DEBUG_TIMER_START();
+	if(!map->spriteCacheValid){
+		for(int x = 0; x < MAP_SIZE_X; x++){
+			for(int y = 0; y < MAP_SIZE_Y; y++){
+				u8 spriteX = 1.0;
+				u8 spriteY = 1.0;
+				u8 tile = map->tile[x][y];
+				if(tile >= TILE_ROAD_NW && tile <= TILE_ROAD_TSE){
+					if(tile == TILE_ROAD){
+						spriteX = 11;
+						spriteY = 1;
+					}
+					else if(tile < TILE_ROAD_TNW){
+						u8 directionIdx = tile - TILE_ROAD_NW;
+						u8 xDiff = 2 - directionIdx % 3;
+						u8 yDiff = 2 - (directionIdx - (directionIdx % 3)) / 3;
+						spriteX = 0  + xDiff;
+						spriteY = 9 + yDiff;
+					}
+					else{
+						u8 directionIdx = tile - TILE_ROAD_TNW;
+						u8 xDiff = directionIdx % 2;
+						u8 yDiff = (directionIdx - (directionIdx % 2)) / 2;
+						spriteX = 3 + xDiff;
+						spriteY = 9 + yDiff;
+					}
+				}
+				rl_cache_simple_sprite(&(map->spriteCache[x][y]), HMM_Vec2(x-MAP_SIZE_X*0.5+0.5, y-MAP_SIZE_Y*0.5+0.5), 
+						HMM_Vec2(1.0, 1.0), HMM_Vec2(spriteX,spriteY), HMM_Vec2(1.0,1.0));
+			}
+		}
+		map->spriteCacheValid = true;
+	}
+
 	for(int x = 0; x < MAP_SIZE_X; x++){
 		for(int y = 0; y < MAP_SIZE_Y; y++){
-			u8 spriteX = 1.0;
-			u8 spriteY = 1.0;
-			u8 tile = map->tile[x][y];
-			if(tile >= TILE_ROAD_NW && tile <= TILE_ROAD_TSE){
-				if(tile == TILE_ROAD){
-					spriteX = 11;
-					spriteY = 1;
-				}
-				else if(tile < TILE_ROAD_TNW){
-					u8 directionIdx = tile - TILE_ROAD_NW;
-					u8 xDiff = 2 - directionIdx % 3;
-					u8 yDiff = 2 - (directionIdx - (directionIdx % 3)) / 3;
-					spriteX = 0  + xDiff;
-					spriteY = 9 + yDiff;
-				}
-				else{
-					u8 directionIdx = tile - TILE_ROAD_TNW;
-					u8 xDiff = directionIdx % 2;
-					u8 yDiff = (directionIdx - (directionIdx % 2)) / 2;
-					spriteX = 3 + xDiff;
-					spriteY = 9 + yDiff;
-				}
-			}
-			rl_draw_simple_sprite(frameArena, list, HMM_Vec2(x-MAP_SIZE_X*0.5+0.5, y-MAP_SIZE_Y*0.5+0.5), 
-					HMM_Vec2(1.0, 1.0), HMM_Vec2(spriteX, spriteY), HMM_Vec2(1.0,1.0));
+			rl_draw_cached_simple_sprite(frameArena, list, &(map->spriteCache[x][y]));
 		}
 	}
+
 	for(int i = 0; i < map->waypointCount; i++){
 		rl_draw_simple_sprite(frameArena, list, map->waypoints[i], HMM_Vec2(1.0, 1.0), HMM_Vec2(22.0, 0.0), HMM_Vec2(1.0,1.0));
 	}

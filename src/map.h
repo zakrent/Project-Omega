@@ -28,6 +28,8 @@ enum TileType{
 typedef struct{
 	u8 tile[MAP_SIZE_X][MAP_SIZE_Y];
 	u8 waypointCount;
+	b32 spriteCacheValid;
+	RLDrawSprite spriteCache[MAP_SIZE_X][MAP_SIZE_Y];
 	hmm_vec2 waypoints[MAX_TURNS+2];
 } Map;
 
