@@ -32,6 +32,9 @@ void rl_set_camera(MemoryArena* frameArena, RenderList *list, hmm_vec2 pos, hmm_
 	header->data = (void *)data;
 }
 
+//Optimization breaks this code
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 void rl_draw_sprite(MemoryArena* frameArena, RenderList *list, hmm_vec2 pos, r32 rotation, hmm_vec2 rotationOffset, hmm_vec2 size, hmm_vec2 spritePos, hmm_vec2 spriteSize){
 	RLEntryHeader *header = rl_new_entry(frameArena, list, RL_DRAW_SPRITE);
 	RLDrawSprite *data = arena_alloc_type(frameArena, RLDrawSprite);
@@ -55,3 +58,4 @@ void rl_draw_simple_sprite(MemoryArena* frameArena, RenderList *list, hmm_vec2 p
 	*data = (RLDrawSprite){.model = m, .spritePos = spritePos, .spriteSize = spriteSize};
 	header->data = (void *)data;
 }
+#pragma GCC pop_options

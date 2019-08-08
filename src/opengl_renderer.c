@@ -149,6 +149,9 @@ GLState opengl_state_init(){
 	return state;
 }
 
+//Optimization breaks this code
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 //Remember to also change value in shader
 #define SPRITE_BUFFER_SIZE 256
 void opengl_draw_buffered_sprites(GLState state, u32 n, RLDrawSprite **sprites){
@@ -175,6 +178,7 @@ void opengl_draw_buffered_sprites(GLState state, u32 n, RLDrawSprite **sprites){
 
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, n);
 }
+#pragma GCC pop_options
 
 void opengl_render_list(RenderList *renderList, GLState state){
 	DEBUG_TIMER_START();
@@ -214,7 +218,6 @@ void opengl_render_list(RenderList *renderList, GLState state){
 	RLEntryHeader *header = renderList->first;
 	while(header){
 		if(bufferedSprites && (header->type != RL_DRAW_SPRITE || bufferedSprites == SPRITE_BUFFER_SIZE)){
-			//opengl_draw_buffered_sprites(state, bufferedSprites, spriteMVP, spriteSizeX, spriteSizeY, spritePosX, spritePosY);
 			opengl_draw_buffered_sprites(state, bufferedSprites, sprites);
 			bufferedSprites = 0;
 		}
