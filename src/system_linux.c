@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <stdarg.h>
 #include <unistd.h>
@@ -17,12 +18,20 @@
 #include "common.h"
 #include "system.h"
 #include "memory_arena.c"
+
+SYSTEM_GET_PERF_TIME(system_get_perf_time);
+
+#include "debug.c"
+
+DebugContext *debugCtx;
+
 #include "render_list.h"
 #include "opengl_renderer.c"
 #include "game.h"
 
 #define FPS 60
 #define DT (1.0/(FPS))
+
 
 void glfw_error_callback(int error, const char* description){
 	fprintf(stderr, "GLFW error: %s\n", description);
@@ -168,16 +177,18 @@ int main(){
 	//Main loop
 	double frameStart = glfwGetTime();
 	while (!glfwWindowShouldClose(window)){
+		DEBUG_TIMER_START();
 		systemAPI.time = frameStart;
 
 		RenderList *renderList;
-		frame(memory, systemAPI, &renderList);
+		frame(memory, systemAPI, &renderList, &debugCtx);
 		
 		opengl_render_list(renderList, glState);
 
         glfwSwapBuffers(window);
 		glfwPollEvents();
 
+		DEBUG_TIMER_STOP();
 		double frameTime = glfwGetTime()-frameStart;
 		if(DT > frameTime){
 			//POSIX.1-2001 deprecated this function but linux still supports it

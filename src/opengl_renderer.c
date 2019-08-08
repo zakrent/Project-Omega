@@ -149,17 +149,35 @@ GLState opengl_state_init(){
 	return state;
 }
 
-void opengl_draw_buffered_sprites(GLState state, u32 n, hmm_m4 *mvp, float *sizeX, float *sizeY, float *posX, float *posY){
-	glUniformMatrix4fv(state.mvpLocation, n, GL_FALSE, (float*)mvp);
-	glUniform1fv(state.sizeXLocation, n, sizeX);
-	glUniform1fv(state.sizeYLocation, n, sizeY);
-	glUniform1fv(state.posXLocation,  n, posX);
-	glUniform1fv(state.posYLocation,  n, posY);
+#define SPRITE_BUFFER_SIZE 256
+//void opengl_draw_buffered_sprites(GLState state, u32 n, hmm_m4 *mvp, float *sizeX, float *sizeY, float *posX, float *posY){
+void opengl_draw_buffered_sprites(GLState state, u32 n, RLDrawSprite **sprites){
+	hmm_m4 spriteMVP[SPRITE_BUFFER_SIZE];
+	float spriteSizeX[SPRITE_BUFFER_SIZE];
+	float spriteSizeY[SPRITE_BUFFER_SIZE];
+	float spritePosX[SPRITE_BUFFER_SIZE];
+	float spritePosY[SPRITE_BUFFER_SIZE];
+
+	for(int i = 0; i < n; i++){
+		RLDrawSprite *rlDrawSprite = sprites[i];
+		spriteMVP[i] = HMM_MultiplyMat4(state.p, HMM_MultiplyMat4(state.v, rlDrawSprite->model));
+		spriteSizeX[i] = rlDrawSprite->spriteSize.X*state.texXMul;
+		spriteSizeY[i] = rlDrawSprite->spriteSize.Y*state.texYMul;
+		spritePosX[i]  = rlDrawSprite->spritePos.X*state.texXMul;
+		spritePosY[i]  = rlDrawSprite->spritePos.Y*state.texYMul;
+	}
+
+	glUniformMatrix4fv(state.mvpLocation, n, GL_FALSE, (float*)spriteMVP);
+	glUniform1fv(state.sizeXLocation, n, spriteSizeX);
+	glUniform1fv(state.sizeYLocation, n, spriteSizeY);
+	glUniform1fv(state.posXLocation,  n, spritePosX);
+	glUniform1fv(state.posYLocation,  n, spritePosY);
 
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, n);
 }
 
 void opengl_render_list(RenderList *renderList, GLState state){
+	DEBUG_TIMER_START();
 	//Resize window
 	r32 windowSizeData[4];
 	glGetFloatv(GL_VIEWPORT, windowSizeData);
@@ -189,12 +207,7 @@ void opengl_render_list(RenderList *renderList, GLState state){
 	glUseProgram(state.spriteShader);
 
 	//Create sprite buffer
-#define SPRITE_BUFFER_SIZE 256
-	hmm_m4 spriteMVP[SPRITE_BUFFER_SIZE];
-	float spriteSizeX[SPRITE_BUFFER_SIZE];
-	float spriteSizeY[SPRITE_BUFFER_SIZE];
-	float spritePosX[SPRITE_BUFFER_SIZE];
-	float spritePosY[SPRITE_BUFFER_SIZE];
+	RLDrawSprite *sprites[SPRITE_BUFFER_SIZE];
 	u32 bufferedSprites = 0;
 
 
@@ -202,7 +215,8 @@ void opengl_render_list(RenderList *renderList, GLState state){
 	RLEntryHeader *header = renderList->first;
 	while(header){
 		if(bufferedSprites && (header->type != RL_DRAW_SPRITE || bufferedSprites == SPRITE_BUFFER_SIZE)){
-			opengl_draw_buffered_sprites(state, bufferedSprites, spriteMVP, spriteSizeX, spriteSizeY, spritePosX, spritePosY);
+			//opengl_draw_buffered_sprites(state, bufferedSprites, spriteMVP, spriteSizeX, spriteSizeY, spritePosX, spritePosY);
+			opengl_draw_buffered_sprites(state, bufferedSprites, sprites);
 			bufferedSprites = 0;
 		}
 		switch(header->type){
@@ -229,17 +243,7 @@ void opengl_render_list(RenderList *renderList, GLState state){
 			case RL_DRAW_SPRITE:
 				{
 					RLDrawSprite *rlDrawSprite = header->data;
-					
-					hmm_m4 m = HMM_MultiplyMat4( HMM_Translate(HMM_Vec3(rlDrawSprite->pos.X, rlDrawSprite->pos.Y, 0.0)),
-							   HMM_MultiplyMat4( HMM_Rotate(rlDrawSprite->rotation, HMM_Vec3(0.0,0.0,1.0)),
-							   HMM_MultiplyMat4( HMM_Translate(HMM_Vec3(rlDrawSprite->rotationOffset.X, rlDrawSprite->rotationOffset.Y, 0.0)),
-												 HMM_Scale(HMM_Vec3(rlDrawSprite->size.Width*0.5, rlDrawSprite->size.Height*0.5, 1.0)))));
-
-					spriteMVP[bufferedSprites] = HMM_MultiplyMat4(state.p, HMM_MultiplyMat4(state.v, m));
-					spriteSizeX[bufferedSprites] = rlDrawSprite->spriteSize.X*state.texXMul;
-					spriteSizeY[bufferedSprites] = rlDrawSprite->spriteSize.Y*state.texYMul;
-					spritePosX[bufferedSprites] = rlDrawSprite->spritePos.X*state.texXMul;
-					spritePosY[bufferedSprites] = rlDrawSprite->spritePos.Y*state.texYMul;
+					sprites[bufferedSprites] = rlDrawSprite;
 					bufferedSprites++;
 					break;
 				}
@@ -250,7 +254,8 @@ void opengl_render_list(RenderList *renderList, GLState state){
 	}
 
 	if(bufferedSprites)
-		opengl_draw_buffered_sprites(state, bufferedSprites, spriteMVP, spriteSizeX, spriteSizeY, spritePosX, spritePosY);
+		opengl_draw_buffered_sprites(state, bufferedSprites, sprites);
+		//opengl_draw_buffered_sprites(state, bufferedSprites, spriteMVP, spriteSizeX, spriteSizeY, spritePosX, spritePosY);
 
 	//Render and delete framebuffer
 	glViewport(0, 0, wWidth*1.0, wHeight*1.0);
@@ -267,4 +272,5 @@ void opengl_render_list(RenderList *renderList, GLState state){
 
 	glDeleteFramebuffers(1, &fbo);
 	glDeleteTextures(1, &fboTexture);
+	DEBUG_TIMER_STOP();
 }

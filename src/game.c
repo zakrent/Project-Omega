@@ -106,6 +106,7 @@ FRAME(frame){
 	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Frame arena              %10u bytes used", gs->frameArena.reallyUsed);
 	debug_draw(gs->debugCtx, gs->uiCtx, list, &gs->frameArena);
 
+	*_debugCtx = gs->debugCtx;
 	*_renderList = list;
 	DEBUG_TIMER_STOP();
 }

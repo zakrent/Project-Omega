@@ -17,7 +17,7 @@ void ui_draw_string(UIContext *ctx, MemoryArena *frameArena, RenderList *list, r
 	for(char *c = s; *c != 0; c++){
 		u32 sx = (*c - 32) % 32;
 		u32 sy = (*c - 32 - sx)/32.0;
-		rl_draw_sprite(frameArena, list, HMM_Vec2(ctx->x+xOffset, ctx->y), 0.0, HMM_Vec2(0.0, 0.0), HMM_Vec2(sizeX,sizeY),HMM_Vec2(sx,sy), HMM_Vec2(1.0, 1.0));
+		rl_draw_simple_sprite(frameArena, list, HMM_Vec2(ctx->x+xOffset, ctx->y), HMM_Vec2(sizeX, sizeY), HMM_Vec2(sx, sy), HMM_Vec2(1.0,1.0));
 		xOffset += sizeX;
 	}
 	ctx->y += sizeY;

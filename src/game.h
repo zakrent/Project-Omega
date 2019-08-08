@@ -8,7 +8,7 @@ typedef struct{
 	u64 transientMemorySize;
 } GameMemory;
 
-#define FRAME(name) void name(GameMemory memory, System _systemAPI, RenderList **_renderList)
+#define FRAME(name) void name(GameMemory memory, System _systemAPI, RenderList **_renderList, DebugContext **_debugCtx)
 typedef FRAME(Frame);
 
 #endif
