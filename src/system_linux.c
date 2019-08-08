@@ -153,7 +153,7 @@ int main(){
 
 	//Load game dl
 	void *handle = dlopen ("./game.so", RTLD_LAZY);
-	if(!dlopen){
+	if(!handle){
 		die("Could not load game.so");
 	}
 

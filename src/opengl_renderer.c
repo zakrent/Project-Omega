@@ -149,8 +149,8 @@ GLState opengl_state_init(){
 	return state;
 }
 
+//Remember to also change value in shader
 #define SPRITE_BUFFER_SIZE 256
-//void opengl_draw_buffered_sprites(GLState state, u32 n, hmm_m4 *mvp, float *sizeX, float *sizeY, float *posX, float *posY){
 void opengl_draw_buffered_sprites(GLState state, u32 n, RLDrawSprite **sprites){
 	hmm_m4 spriteMVP[SPRITE_BUFFER_SIZE];
 	float spriteSizeX[SPRITE_BUFFER_SIZE];
@@ -210,7 +210,6 @@ void opengl_render_list(RenderList *renderList, GLState state){
 	RLDrawSprite *sprites[SPRITE_BUFFER_SIZE];
 	u32 bufferedSprites = 0;
 
-
 	//Draw render list
 	RLEntryHeader *header = renderList->first;
 	while(header){
@@ -253,9 +252,7 @@ void opengl_render_list(RenderList *renderList, GLState state){
 		header = header->nextEntry;
 	}
 
-	if(bufferedSprites)
-		opengl_draw_buffered_sprites(state, bufferedSprites, sprites);
-		//opengl_draw_buffered_sprites(state, bufferedSprites, spriteMVP, spriteSizeX, spriteSizeY, spritePosX, spritePosY);
+	opengl_draw_buffered_sprites(state, bufferedSprites, sprites);
 
 	//Render and delete framebuffer
 	glViewport(0, 0, wWidth*1.0, wHeight*1.0);

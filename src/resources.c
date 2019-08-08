@@ -38,6 +38,7 @@ typedef struct{
 
 Shader resources_get_shader(u16 type, Resources *res){
 	assert(0);
+	return (Shader){0};
 }
 
 SpriteSheet resources_get_sprite_sheet(u16 type, Resources *res){

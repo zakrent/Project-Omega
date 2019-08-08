@@ -11,6 +11,7 @@ EntityHandle entity_new(EntitiesData *data, Entity newEntity){
 		}
 	}
 	assert(0);
+	return (EntityHandle){0};
 }
 
 Entity *entity_get(EntitiesData *data, EntityHandle handle){
@@ -19,9 +20,7 @@ Entity *entity_get(EntitiesData *data, EntityHandle handle){
 	if(entry->valid && entry->generation == handle.generation){
 		return &entry->entity;
 	}
-	else{
-		return NULL;
-	}
+	return NULL;
 }
 
 hmm_v2 child_absolute_pos(Entity* master, hmm_v2 childPos){
@@ -77,7 +76,7 @@ void entity_update(EntitiesData *data, Map *map){
 							case 1:
 								{
 									hmm_v2 direction = HMM_SubtractVec2(e->pathFollowerData.waypoint, e->pos);
-									r32 distance = HMM_LengthVec2(direction);
+									//r32 distance = HMM_LengthVec2(direction);
 									r32 angleDelta = HMM_Clamp(-0.08, HMM_ATan2F(direction.Y, direction.X) - e->rotation, 0.08);
 									if(HMM_ABS(angleDelta) <= 0.001){
 										e->pathFollowerData.state = 2;
@@ -147,7 +146,7 @@ void entity_update(EntitiesData *data, Map *map){
 							Entity *t = entity_get(data, e->shooterData.target);
 							if(t){
 								hmm_v2 direction = HMM_SubtractVec2(t->pos, absolutePos);
-								r32 distance = HMM_LengthVec2(direction);
+								//r32 distance = HMM_LengthVec2(direction);
 								e->rotation += HMM_ATan2F(direction.Y, direction.X)-absoluteRotation;
 								if(e->shooterData.firingDelayCounter <= 0.0){
 									EntityHandle ph = entity_spawn_prefab(data, EPI_PROJECTILE, absolutePos, absoluteRotation);
@@ -244,4 +243,5 @@ EntityHandle entity_spawn_prefab(EntitiesData *data, u32 prefabId, hmm_vec2 pos,
 			assert(0);
 			break;
 	}
+	return (EntityHandle){0};
 }

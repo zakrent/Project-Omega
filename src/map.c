@@ -18,7 +18,7 @@ void map_generate(Map* map, u16 seed){
 	do{
 		switch(direction){
 			case 0:
-				if(headY <= 2 || nTurns == MAX_TURNS - 1 || dirLength >= 2 && randfu() < 0.1){
+				if(headY <= 2 || nTurns == MAX_TURNS - 1 || (dirLength >= 2 && randfu() < 0.1)){
 					map->tile[headX][headY]     = TILE_ROAD_W;
 					map->tile[headX][headY-1]   = TILE_ROAD_TNW;
 					map->tile[headX+1][headY-1] = TILE_ROAD_N;
@@ -71,7 +71,7 @@ void map_generate(Map* map, u16 seed){
 				}
 				break;
 			case 2:
-				if(headY >= MAP_SIZE_Y - 3 || nTurns == MAX_TURNS - 1 || dirLength >= 2 && randfu() < 0.1){
+				if(headY >= MAP_SIZE_Y - 3 || nTurns == MAX_TURNS - 1 || (dirLength >= 2 && randfu() < 0.1)){
 					map->tile[headX][headY]     = TILE_ROAD_W;
 					map->tile[headX+1][headY]   = TILE_ROAD_NE;
 					map->tile[headX][headY+1]   = TILE_ROAD_TSW;
