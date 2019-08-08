@@ -92,6 +92,13 @@ SYSTEM_CLOSE_FILE(system_close_file){
 	munmap(file.content, file.size);
 }
 
+SYSTEM_GET_PERF_TIME(system_get_perf_time){
+	struct timespec time;
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time);
+	u64 unitedTime = time.tv_sec * (u64)1e9 + time.tv_nsec;
+	return unitedTime;
+}
+
 int main(){
 	//Create window with opengl context
 	if(!glfwInit()){
@@ -155,6 +162,7 @@ int main(){
 		.system_open_file        = system_open_file,
 		.system_close_file       = system_close_file,
 		.system_generate_texture = opengl_generate_texture,
+		.system_get_perf_time    = system_get_perf_time,
 	};
 
 	//Main loop

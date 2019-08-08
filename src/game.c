@@ -1,5 +1,7 @@
 #include <stdint.h>
 #include <stdarg.h>
+//TODO: remove this:
+#include <string.h>
 #include <x86intrin.h>
 #define HANDMADE_MATH_IMPLEMENTATION
 #include "HandmadeMath.h"
@@ -7,11 +9,14 @@
 #include "system.h"
 
 System systemAPI;
+struct DebugContext;
+struct DebugContext *debugCtx;
 
 #include "memory_arena.c"
 #include "resources.c"
 #include "render_list.c"
 #include "ui.c"
+#include "debug.c"
 #include "game.h"
 #include "map.c"
 #include "entity.h"
@@ -23,14 +28,19 @@ typedef struct{
 	EntitiesData *entities;
 	Map *map;
 	Resources *resources;
+	UIContext *uiCtx;
+	DebugContext *debugCtx;
 	MemoryArena masterArena;
 	MemoryArena transientArena;
 	MemoryArena frameArena;
 } GameState;
 
+
 FRAME(frame){
 	GameState *gs = memory.permanentMemory;
 	systemAPI = _systemAPI;
+	debugCtx = gs->debugCtx;
+	DEBUG_TIMER_START();
 
 	if(!gs->initialized){
 		gs->masterArena    = arena_init(memory.permanentMemory+sizeof(GameState), memory.permanentMemorySize-sizeof(GameState));
@@ -40,23 +50,24 @@ FRAME(frame){
 		gs->map = arena_alloc_type(&gs->masterArena, Map);
 		map_generate(gs->map, 0);
 
-		gs->entities = arena_alloc_type(&gs->masterArena, Map);
+		gs->entities = arena_alloc_type(&gs->masterArena, EntitiesData);
 
 		entity_spawn_prefab(gs->entities, EPI_TURRET,     HMM_Vec2(0.0, 0.0),   0.0);
-#if 0
-		entity_spawn_prefab(gs->entities, EPI_TANK,       HMM_Vec2(-6.0, -1.0), 0.0);
-		entity_spawn_prefab(gs->entities, EPI_PROJECTILE, HMM_Vec2(1.0, 1.0),   1.5);
-#endif
 
 		gs->resources = arena_alloc_type(&gs->transientArena, Resources);
+
+		gs->debugCtx = arena_alloc_type(&gs->transientArena, DebugContext);
+
+		gs->uiCtx = arena_alloc_type(&gs->masterArena, UIContext);
 
 		gs->initialized = true;
 		systemAPI.system_log(LOG_DEBUG, "GameState initialized");
 	}
 
+
 	static u64 counter = 0;
 	counter++;
-	if(counter % 120 == 0){
+	if(counter % 20 == 0){
 		entity_spawn_prefab(gs->entities, EPI_TANK, gs->map->waypoints[0], 0.0);
 	}
 
@@ -82,14 +93,19 @@ FRAME(frame){
 
 	static r32 lastTime;
 	static r32 highestTime;
-	if(systemAPI.time - lastTime > highestTime && counter > 2)
-		highestTime = systemAPI.time - lastTime;
-	ui_draw_string(&gs->frameArena, list, -1.75, -0.96, 5.0, "Frame time               %10.2f ms", (systemAPI.time-lastTime)*1000.0);
-	ui_draw_string(&gs->frameArena, list, -1.75, -0.92, 5.0, "Highest frame time       %10.2f ms", highestTime*1000.0);
-	ui_draw_string(&gs->frameArena, list, -1.75, -0.88, 5.0, "Master arena             %10u bytes used", gs->masterArena.reallyUsed);
-	ui_draw_string(&gs->frameArena, list, -1.75, -0.84, 5.0, "Transient arena          %10u bytes used", gs->transientArena.reallyUsed);
-	ui_draw_string(&gs->frameArena, list, -1.75, -0.80, 5.0, "Frame arena              %10u bytes used", gs->frameArena.reallyUsed);
+	r32 currentTime = systemAPI.time-lastTime;
+	if(currentTime > highestTime && counter > 2)
+		highestTime = currentTime;
 	lastTime = systemAPI.time;
 
+	ui_move(gs->uiCtx, -1.75, -0.96);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Frame time               %10.2f ms", currentTime*1000.0);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Highest frame time       %10.2f ms", highestTime*1000.0);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Master arena             %10u bytes used", gs->masterArena.reallyUsed);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Transient arena          %10u bytes used", gs->transientArena.reallyUsed);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Frame arena              %10u bytes used", gs->frameArena.reallyUsed);
+	debug_draw(gs->debugCtx, gs->uiCtx, list, &gs->frameArena);
+
 	*_renderList = list;
+	DEBUG_TIMER_STOP();
 }

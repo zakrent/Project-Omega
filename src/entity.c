@@ -37,6 +37,7 @@ r32 child_absolute_rotation(Entity* master, r32 childRotation){
 }
 
 void entity_update(EntitiesData *data, Map *map){
+	DEBUG_TIMER_START();
 	for(int i = 0; i < MAX_ENTITIES; i++){
 		EntityEntry *entry = data->entities+i;
 		if(entry->valid){
@@ -193,9 +194,11 @@ void entity_update(EntitiesData *data, Map *map){
 			}
 		}
 	}
+	DEBUG_TIMER_STOP();
 }
 
 void entity_draw(EntitiesData *data, MemoryArena *frameArena, RenderList *list){
+	DEBUG_TIMER_START();
 	for(int i = 0; i < MAX_ENTITIES; i++){
 		EntityEntry *entry = data->entities+i;
 		if(entry->valid){
@@ -213,6 +216,7 @@ void entity_draw(EntitiesData *data, MemoryArena *frameArena, RenderList *list){
 			rl_draw_sprite(frameArena, list, absolutePos, absoluteRotation, s->rotationOffset, s->size, s->spritePos, s->spriteSize);
 		}
 	}
+	DEBUG_TIMER_STOP();
 }
 
 EntityHandle entity_spawn_prefab(EntitiesData *data, u32 prefabId, hmm_vec2 pos, r32 rotation){

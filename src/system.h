@@ -26,12 +26,16 @@ typedef SYSTEM_CLOSE_FILE(SystemCloseFile);
 #define SYSTEM_GENERATE_TEXTURE(name) u32 name(void* data, u32 width, u32 height)
 typedef SYSTEM_GENERATE_TEXTURE(SystemGenerateTexture);
 
+#define SYSTEM_GET_PERF_TIME(name) u64 name()
+typedef SYSTEM_GET_PERF_TIME(SystemGetPerfTime);
+
 typedef struct{
 	r32 time;
 	SystemLog             *system_log;
 	SystemOpenFile        *system_open_file;
 	SystemCloseFile       *system_close_file;
 	SystemGenerateTexture *system_generate_texture;
+	SystemGetPerfTime     *system_get_perf_time;
 } System;
 
 #endif
