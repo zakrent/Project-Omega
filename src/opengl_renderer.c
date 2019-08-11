@@ -23,11 +23,11 @@ const char* spriteVertexShader =
 "layout(location = 0) in vec2 vp;"
 "layout(location = 1) in vec2 texCord;"
 "out vec2 TexCord;"
-"uniform mat4  mvp[256];"
-"uniform float sizeX[256];"
-"uniform float sizeY[256];"
-"uniform float posX[256];"
-"uniform float posY[256];"
+"uniform mat4  mvp[128];"
+"uniform float sizeX[128];"
+"uniform float sizeY[128];"
+"uniform float posX[128];"
+"uniform float posY[128];"
 "void main() {"
 "  TexCord.x = texCord.x*sizeX[gl_InstanceID]+posX[gl_InstanceID];"
 "  TexCord.y = texCord.y*sizeY[gl_InstanceID]+posY[gl_InstanceID];"
@@ -92,10 +92,19 @@ GLuint opengl_create_shader(const char *vss, const char *fss){
 	glShaderSource(fs, 1, &fss, NULL);
 	glCompileShader(fs);
 
+	char buffer[256];
+	glGetShaderInfoLog(vs, 256, NULL, buffer);
+	puts(buffer);
+	glGetShaderInfoLog(fs, 256, NULL, buffer);
+
 	GLuint sp = glCreateProgram();
 	glAttachShader(sp, fs);
 	glAttachShader(sp, vs);
 	glLinkProgram(sp);
+
+	glGetProgramInfoLog(sp, 256, NULL, buffer);
+	puts(buffer);
+
 	return sp;
 }
 
@@ -153,7 +162,7 @@ GLState opengl_state_init(){
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 //Remember to also change value in shader
-#define SPRITE_BUFFER_SIZE 256
+#define SPRITE_BUFFER_SIZE 128
 void opengl_draw_buffered_sprites(GLState state, u32 n, RLDrawSprite **sprites){
 	hmm_m4 spriteMVP[SPRITE_BUFFER_SIZE];
 	float spriteSizeX[SPRITE_BUFFER_SIZE];
