@@ -123,7 +123,7 @@ int main(){
 	glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
 	glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
 	glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-	GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, "Project Omega", glfwGetPrimaryMonitor(), NULL);
+	GLFWwindow* window = glfwCreateWindow(1280, 720, "Project Omega", NULL, NULL);
 	if (!window){
 		die("Window creation failed. Minimum required OpenGL version may not be avaible.");
 	}
@@ -139,7 +139,7 @@ int main(){
 	}
 
 	//Enable vsync
-//	glfwSwapInterval(1);
+	glfwSwapInterval(1);
 
 	//Allocate game memory
 	GameMemory memory;

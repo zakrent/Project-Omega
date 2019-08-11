@@ -47,16 +47,16 @@ SpriteSheet resources_get_sprite_sheet(u16 type, Resources *res){
 	}
 	systemAPI.system_log(LOG_DEBUG, "Loading sprite sheet id: %u", type);
 	File file;
-	r32 xMulBase = 64;
-	r32 yMulBase = 64;
+	r32 xMulBase = 64.0;
+	r32 yMulBase = 64.0;
 	switch(type){
 		case SS_BASIC:
 			file = systemAPI.system_open_file("./res/basic.bmp");
 			break;
 		case SS_FONT:
 			file = systemAPI.system_open_file("./res/font.bmp");
-			xMulBase = 16;
-			yMulBase = 32;
+			xMulBase = 16.0;
+			yMulBase = 32.0;
 			break;
 		default:
 			break;
@@ -75,6 +75,8 @@ SpriteSheet resources_get_sprite_sheet(u16 type, Resources *res){
 			.height = header->height,
 			.xMul = xMulBase/header->width,
 			.yMul = yMulBase/header->height,
+			.xOffset = 0.5/(1.0*header->width),
+			.yOffset = 0.5/(1.0*header->height),
 		};
 	}
 	return res->spriteSheets[type];

@@ -17,6 +17,8 @@ typedef struct{
 	u32 height;
 	r32 xMul;
 	r32 yMul;
+	r32 xOffset;
+	r32 yOffset;
 } SpriteSheet;
 
 enum Shaders{

@@ -6,6 +6,8 @@ typedef struct{
 	GLuint textureVBO;
 	r32 texXMul;
 	r32 texYMul;
+	r32 texXOffset;
+	r32 texYOffset;
 	GLuint mainVAO;
 	GLuint basicShader;
 	GLuint spriteShader;

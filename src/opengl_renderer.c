@@ -173,10 +173,10 @@ void opengl_draw_buffered_sprites(GLState state, u32 n, RLDrawSprite **sprites){
 	for(int i = 0; i < n; i++){
 		RLDrawSprite *rlDrawSprite = sprites[i];
 		spriteMVP[i] = HMM_MultiplyMat4(state.p, HMM_MultiplyMat4(state.v, rlDrawSprite->model));
-		spriteSizeX[i] = rlDrawSprite->spriteSize.X*state.texXMul;
-		spriteSizeY[i] = rlDrawSprite->spriteSize.Y*state.texYMul;
-		spritePosX[i]  = rlDrawSprite->spritePos.X*state.texXMul;
-		spritePosY[i]  = rlDrawSprite->spritePos.Y*state.texYMul;
+		spriteSizeX[i] = rlDrawSprite->spriteSize.X*state.texXMul-state.texXOffset;
+		spriteSizeY[i] = rlDrawSprite->spriteSize.Y*state.texYMul-state.texYOffset;
+		spritePosX[i]  = rlDrawSprite->spritePos.X*state.texXMul+state.texXOffset;
+		spritePosY[i]  = rlDrawSprite->spritePos.Y*state.texYMul+state.texYOffset;
 	}
 
 	glUniformMatrix4fv(state.mvpLocation, n, GL_FALSE, (float*)spriteMVP);
@@ -208,14 +208,14 @@ void opengl_render_list(RenderList *renderList, GLState state){
 	glGenTextures(1, &fboTexture);
 	glBindTexture(GL_TEXTURE_2D, fboTexture);
 	  
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wWidth*2.0, wHeight*2.0, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wWidth*4.0, wHeight*4.0, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTexture, 0);
 
-	glViewport(0, 0, wWidth*2.0, wHeight*2.0);
+	glViewport(0, 0, wWidth*4.0, wHeight*4.0);
 	//Use correct shaders
 	glUseProgram(state.spriteShader);
 
@@ -242,6 +242,8 @@ void opengl_render_list(RenderList *renderList, GLState state){
 					glBindTexture(GL_TEXTURE_2D, rlUseTexture->handle);
 					state.texXMul = rlUseTexture->xMul;
 					state.texYMul = rlUseTexture->yMul;
+					state.texXOffset = rlUseTexture->xOffset;
+					state.texYOffset = rlUseTexture->yOffset;
 					break;
 				}
 			case RL_SET_CAMERA:

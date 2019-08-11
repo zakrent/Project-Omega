@@ -21,7 +21,7 @@ void rl_color_clear(MemoryArena* frameArena, RenderList *list){
 void rl_use_texture(MemoryArena* frameArena, RenderList *list, SpriteSheet sheet){
 	RLEntryHeader *header = rl_new_entry(frameArena, list, RL_USE_TEXTURE);
 	RLUseTexture *data = arena_alloc_type(frameArena, RLUseTexture);
-	*data = (RLUseTexture){.handle = sheet.handle, .xMul = sheet.xMul, .yMul = sheet.yMul};
+	*data = (RLUseTexture){.handle = sheet.handle, .xMul = sheet.xMul, .yMul = sheet.yMul, .xOffset = sheet.xOffset, .yOffset = sheet.yOffset};
 	header->data = (void *)data;
 }
 

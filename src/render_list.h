@@ -34,6 +34,8 @@ typedef struct{
 	u32 handle;
 	r32 xMul;
 	r32 yMul;
+	r32 xOffset;
+	r32 yOffset;
 }RLUseTexture;
 
 typedef struct{
