@@ -3,14 +3,12 @@
 
 #define MAX_ENTITIES 1024
 
-enum EntityController{
-	CONTROLLER_NONE,
+enum EntityType{
+	ENTITY_TURRET,
+	ENTITY_TANK,
+	ENTITY_PROJECTILE,
 
-	CONTROLLER_PATH_FOLLOWER,
-	CONTROLLER_SHOOTER,
-	CONTROLLER_PROJECTILE,
-
-	COUNT_CONTROLLER
+	COUNT_ENTITY_TYPE
 };
 
 typedef struct{
@@ -19,25 +17,33 @@ typedef struct{
 } EntityHandle;
 
 typedef struct{
-	b32 valid;
-	u32 stats;
-	b32 isMaster;
+	u8 state;
+	u8 waypointNumber;
+	hmm_v2 waypoint;
+} PathFollowerData;
+
+typedef struct{
+	b32 hasTarget;
+	u32 firingDelayCounter;
+	EntityHandle target;
+} ShooterData;
+
+typedef struct{
+	b16 valid;
+	u16 type;
 	r32 health;
-	EntityHandle master;
-	hmm_vec2 pos;
 	r32 rotation;
+	hmm_vec2 pos;
 	union{
 		struct{
-			u8 state;
-			u8 waypointNumber;
-			hmm_vec2 waypoint;
-		} pathFollowerData;
+			r32 turretRotation;
+			ShooterData shooterData;
+			PathFollowerData pathFollowerData;
+		} tankData;
 
 		struct{
-			b32 hasTarget;
-			u32 firingDelayCounter;
-			EntityHandle target;
-		} shooterData;
+			ShooterData shooterData;
+		} turretData;
 		
 		struct{
 			EntityHandle target;
@@ -48,7 +54,7 @@ typedef struct{
 typedef struct{
 	u32 generation;
 	union{
-		b32 valid;
+		b16 valid;
 		Entity entity;
 	};
 } EntityEntry;
@@ -62,18 +68,6 @@ EntityHandle entity_new(EntitiesData *data, Entity newEntity);
 Entity *entity_get(EntitiesData *data, EntityHandle handle);
 void entity_update(EntitiesData *data, Map *map);
 void entity_draw(EntitiesData *data, MemoryArena *frameArena, RenderList *list);
-
-enum EntityPrefabId{
-	EPI_INVALID,
-
-	EPI_PROJECTILE,
-
-	EPI_TURRET,
-	EPI_TANK,
-
-	COUNT_EPI
-};
-
-EntityHandle entity_spawn_prefab(EntitiesData *data, u32 prefabId, hmm_vec2 pos, r32 rotation);
+void entity_spawn(EntitiesData *data, Map *map);
 
 #endif

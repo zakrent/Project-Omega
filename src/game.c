@@ -20,7 +20,6 @@ struct DebugContext *debugCtx;
 #include "game.h"
 #include "map.c"
 #include "entity.h"
-#include "entity_stats.h"
 #include "entity.c"
 
 typedef struct{
@@ -52,8 +51,6 @@ FRAME(frame){
 
 		gs->entities = arena_alloc_type(&gs->masterArena, EntitiesData);
 
-		entity_spawn_prefab(gs->entities, EPI_TURRET,     HMM_Vec2(0.0, 0.0),   0.0);
-
 		gs->resources = arena_alloc_type(&gs->transientArena, Resources);
 
 		gs->debugCtx = arena_alloc_type(&gs->transientArena, DebugContext);
@@ -67,8 +64,8 @@ FRAME(frame){
 
 	static u64 counter = 0;
 	counter++;
-	if(counter % 20 == 0){
-		entity_spawn_prefab(gs->entities, EPI_TANK, gs->map->waypoints[0], 0.0);
+	if(counter % 120 == 0 || counter == 0){
+		entity_spawn(gs->entities, gs->map);
 	}
 
 	arena_clear(&gs->frameArena);

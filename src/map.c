@@ -145,7 +145,7 @@ void map_draw(Map *map, MemoryArena *frameArena, RenderList* list){
 	}
 
 	for(int i = 0; i < map->waypointCount; i++){
-		rl_draw_simple_sprite(frameArena, list, map->waypoints[i], HMM_Vec2(1.0, 1.0), HMM_Vec2(22.0, 0.0), HMM_Vec2(1.0,1.0));
+		rl_draw_simple_sprite(frameArena, list, map->waypoints[i], HMM_Vec2(1.0, 1.0), HMM_Vec2(22.0, -0.01), HMM_Vec2(1.0,1.0));
 	}
 	DEBUG_TIMER_STOP();
 }
