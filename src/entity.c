@@ -158,13 +158,31 @@ void entity_update(EntitiesData *data, Map *map){
 						Entity *t = entity_get(data, e->projectileData.target);
 						if(!t){
 							e->valid = false;
-							continue;
+							break;
 						}
 
-						hmm_v2 direction = HMM_SubtractVec2(t->pos, e->pos);
-						e->rotation = HMM_ATan2F(direction.Y, direction.X);
+						const r32 speed = 0.2;
 
-						r32 distance = HMM_LengthVec2(direction);
+						if(!e->projectileData.hasOldTargetPos)
+							e->projectileData.oldTargetPos = t->pos;
+
+						hmm_v2 inverseRawDirection = HMM_SubtractVec2(e->pos, t->pos);
+						hmm_v2 targetVelocity = HMM_SubtractVec2(e->projectileData.oldTargetPos, t->pos);
+
+						r32 cosOmega = HMM_DotVec2(HMM_NormalizeVec2(targetVelocity), HMM_NormalizeVec2(inverseRawDirection));
+						r32 sinOmega = HMM_SquareRootF(1.0-cosOmega*cosOmega);
+						r32 beta = asinf(sinOmega*(HMM_LengthVec2(targetVelocity)/speed));
+
+						if(targetVelocity.Y < 0){
+							beta *= -1;
+						}
+
+						e->rotation = HMM_ATan2F(-inverseRawDirection.Y, -inverseRawDirection.X)+beta;
+						
+						e->projectileData.oldTargetPos = t->pos;
+						e->projectileData.hasOldTargetPos = true;
+
+						r32 distance = HMM_LengthVec2(inverseRawDirection);
 						hmm_v2 vel = HMM_MultiplyMat4ByVec4(HMM_Rotate(e->rotation, HMM_Vec3(0.0, 0.0, 1.0)), HMM_Vec4(0.2, 0.0, 0.0, 1.0)).XY;
 						hmm_v2 newPos = HMM_AddVec2(e->pos, vel);
 						r32 newDistance = HMM_LengthVec2(HMM_SubtractVec2(t->pos, newPos));

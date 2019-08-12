@@ -109,7 +109,7 @@ GLuint opengl_create_shader(const char *vss, const char *fss){
 }
 
 GLState opengl_state_init(){
-	glEnable              ( GL_DEBUG_OUTPUT );
+	//glEnable              ( GL_DEBUG_OUTPUT );
 	glDebugMessageCallback( MessageCallback, 0 );
 
 	GLState state;

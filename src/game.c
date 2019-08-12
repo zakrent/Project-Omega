@@ -64,7 +64,7 @@ FRAME(frame){
 
 	static u64 counter = 0;
 	counter++;
-	if(counter % 120 == 0 || counter == 0){
+	if(counter % 20 == 0 || counter == 0){
 		entity_spawn(gs->entities, gs->map);
 	}
 

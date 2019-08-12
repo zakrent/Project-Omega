@@ -36,9 +36,9 @@ typedef struct{
 	hmm_vec2 pos;
 	union{
 		struct{
-			r32 turretRotation;
 			ShooterData shooterData;
 			PathFollowerData pathFollowerData;
+			r32 turretRotation;
 		} tankData;
 
 		struct{
@@ -47,6 +47,8 @@ typedef struct{
 		
 		struct{
 			EntityHandle target;
+			hmm_v2 oldTargetPos;
+			b32 hasOldTargetPos;
 		} projectileData;
 	};
 } Entity;

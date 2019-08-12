@@ -12,10 +12,12 @@
 #include <sys/stat.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#define HANDMADE_MATH_IMPLEMENTATION
+
 #define SYSTEM_LAYER
+
+#define HANDMADE_MATH_IMPLEMENTATION
 #include "HandmadeMath.h"
-#include "common.h"
+#include "common.c"
 #include "system.h"
 #include "memory_arena.c"
 
@@ -31,7 +33,6 @@ DebugContext *debugCtx;
 
 #define FPS 60
 #define DT (1.0/(FPS))
-
 
 void glfw_error_callback(int error, const char* description){
 	fprintf(stderr, "GLFW error: %s\n", description);
@@ -174,12 +175,14 @@ int main(){
 		.system_get_perf_time    = system_get_perf_time,
 	};
 
+	//Init audio (hopefully)
+
 	//Main loop
 	double frameStart = glfwGetTime();
 	while (!glfwWindowShouldClose(window)){
 		DEBUG_TIMER_START();
-		systemAPI.time = frameStart;
 
+		systemAPI.time = frameStart;
 		RenderList *renderList;
 		frame(memory, systemAPI, &renderList, &debugCtx);
 		
