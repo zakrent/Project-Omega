@@ -14,6 +14,8 @@
 #include <GLFW/glfw3.h>
 
 #define SYSTEM_LAYER
+#define MINIAUDIO_IMPLEMENTATION
+#include "miniaudio.h"
 
 #define HANDMADE_MATH_IMPLEMENTATION
 #include "HandmadeMath.h"
@@ -109,6 +111,13 @@ SYSTEM_GET_PERF_TIME(system_get_perf_time){
 	return unitedTime;
 }
 
+u32 sampleRate = 0;
+void audio_data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount){
+	for(int i = 0; i < frameCount; i++){
+		((r32*)pOutput)[i] = randf(-1.0, 1.0);
+	}
+}
+
 int main(){
 	//Create window with opengl context
 	if(!glfwInit()){
@@ -176,6 +185,27 @@ int main(){
 	};
 
 	//Init audio (hopefully)
+	ma_result result;
+	ma_device device;
+	sampleRate = ma_get_best_sample_rate_within_range(40000,48000);
+
+	ma_device_config config = ma_device_config_init(ma_device_type_playback);
+	config.playback.pDeviceID = NULL;
+	config.playback.format    = ma_format_f32;
+	config.playback.channels  = 1;
+	config.sampleRate         = sampleRate;
+	config.dataCallback       = audio_data_callback;
+	//config.pUserData          = &myUserData;
+
+	result = ma_device_init(NULL, &config, &device);
+	if(result != MA_SUCCESS) {
+		die("Failed to open playback device.");
+	}
+
+	result = ma_device_start(&device);
+	if(result != MA_SUCCESS) {
+		die("Failed to start playback device.");
+	}
 
 	//Main loop
 	double frameStart = glfwGetTime();
@@ -203,5 +233,8 @@ int main(){
 		}
 		frameStart = glfwGetTime();
 	}
+
+    ma_device_uninit(&device);
+
 	return 0;
 }
