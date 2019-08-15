@@ -234,7 +234,7 @@ void entity_populate_prefabs(EntitiesData *data){
 	prefabs[EP_TANK].entity    = (Entity){.type = ENTITY_TANK, .health = 3.0};
 	prefabs[EP_TANK].buildable = false;
 	//Turret
-	prefabs[EP_TURRET].entity    = (Entity){.type = ENTITY_TANK, .health = 3.0};
+	prefabs[EP_TURRET].entity    = (Entity){.type = ENTITY_TURRET};
 	prefabs[EP_TURRET].buildable = true;
 }
 

@@ -36,12 +36,16 @@ DebugContext *debugCtx;
 #define FPS 60
 #define DT (1.0/(FPS))
 
+u32 windowWidth, windowHeight;
+
 void glfw_error_callback(int error, const char* description){
 	fprintf(stderr, "GLFW error: %s\n", description);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height){
 	glViewport(0, 0, width, height);
+	windowWidth = width;
+	windowHeight = height;
 }
 
 void die(const char *fmt, ...){
@@ -137,6 +141,8 @@ int main(){
 	if (!window){
 		die("Window creation failed. Minimum required OpenGL version may not be avaible.");
 	}
+	windowWidth = 1280;
+	windowHeight = 720;
 
 	glfwMakeContextCurrent(window);
 
@@ -207,14 +213,28 @@ int main(){
 		die("Failed to start playback device.");
 	}
 
+
 	//Main loop
+	GameInput input;
 	double frameStart = glfwGetTime();
 	while (!glfwWindowShouldClose(window)){
 		DEBUG_TIMER_START();
 
+		glfwGetCursorPos(window, &input.mouseX, &input.mouseY);
+		input.mouseX = (input.mouseX/(windowWidth*0.5)-1.0)*windowWidth/windowHeight;
+		input.mouseY = input.mouseY/(windowHeight*0.5)-1.0;
+		b32 LMBDown = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == GLFW_PRESS;
+		if(LMBDown != input.LMBDown){
+			input.LMBChanged = true;
+		}
+		else{
+			input.LMBChanged = false;
+		}
+		input.LMBDown = LMBDown;
+
 		systemAPI.time = frameStart;
 		RenderList *renderList;
-		frame(memory, systemAPI, &renderList, &debugCtx);
+		frame(memory, input, systemAPI, &renderList, &debugCtx);
 		
 		opengl_render_list(renderList, glState);
 

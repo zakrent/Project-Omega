@@ -68,6 +68,16 @@ FRAME(frame){
 		entity_spawn(gs->entities, EP_TANK, gs->map->waypoints[0]);
 	counter++;
 
+	if(input.LMBChanged && !input.LMBDown){
+		r32 posX = input.mouseX*16.0;
+		posX += 0.5*posX/HMM_ABS(posX);
+		posX = (i32)posX;
+		r32 posY = input.mouseY*16.0;
+		posY += 0.5*posY/HMM_ABS(posY);
+		posY = (i32)posY;
+		entity_spawn(gs->entities, EP_TURRET, HMM_Vec2(posX, posY));
+	}
+
 	arena_clear(&gs->frameArena);
 
 	entity_update(gs->entities, gs->map);
@@ -86,6 +96,9 @@ FRAME(frame){
 	entity_draw(gs->entities, &gs->frameArena, list);
 	
 	rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0));
+
+	rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(input.mouseX, input.mouseY), HMM_MultiplyVec2f(HMM_Vec2(0.1, 0.1), 1.0+input.LMBDown), HMM_Vec2(22.0, -0.01), HMM_Vec2(1.0,1.0));
+
 	rl_use_texture(&gs->frameArena, list, fontSheet);
 
 	static r32 lastTime;
@@ -101,6 +114,8 @@ FRAME(frame){
 	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Master arena             %10u bytes used", gs->masterArena.used);
 	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Transient arena          %10u bytes used", gs->transientArena.used);
 	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Frame arena              %10u bytes used", gs->frameArena.used);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Mouse X                  %10.2f", input.mouseX);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Mouse Y                  %10.2f", input.mouseY);
 	debug_draw(gs->debugCtx, gs->uiCtx, list, &gs->frameArena);
 
 	*_debugCtx = gs->debugCtx;
