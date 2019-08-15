@@ -228,12 +228,18 @@ void entity_draw(EntitiesData *data, MemoryArena *frameArena, RenderList *list){
 	DEBUG_TIMER_STOP();
 }
 
-void entity_spawn(EntitiesData *data, Map *map){
-	//Debug var
-	static b32 first = true;
-	if(first){
-		entity_new(data, (Entity){.type = ENTITY_TURRET});
-	}
-	first = false;
-	entity_new(data, (Entity){.type = ENTITY_TANK, .pos = map->waypoints[0], .health = 3.0});
+void entity_populate_prefabs(EntitiesData *data){
+	EntityPrefab *prefabs = data->entityPrefabs;
+	//Tank
+	prefabs[EP_TANK].entity    = (Entity){.type = ENTITY_TANK, .health = 3.0};
+	prefabs[EP_TANK].buildable = false;
+	//Turret
+	prefabs[EP_TURRET].entity    = (Entity){.type = ENTITY_TANK, .health = 3.0};
+	prefabs[EP_TURRET].buildable = true;
+}
+
+void entity_spawn(EntitiesData *data, u32 prefabId, hmm_v2 pos){
+	Entity newEntity = data->entityPrefabs[prefabId].entity;
+	newEntity.pos = pos;
+	entity_new(data, newEntity);
 }

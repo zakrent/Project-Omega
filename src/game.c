@@ -50,6 +50,7 @@ FRAME(frame){
 		map_generate(gs->map, 0);
 
 		gs->entities = arena_alloc_type(&gs->masterArena, EntitiesData);
+		entity_populate_prefabs(gs->entities);
 
 		gs->resources = arena_alloc_type(&gs->transientArena, Resources);
 
@@ -63,10 +64,9 @@ FRAME(frame){
 
 
 	static u64 counter = 0;
+	if(counter % 20 == 0 || counter == 0)
+		entity_spawn(gs->entities, EP_TANK, gs->map->waypoints[0]);
 	counter++;
-	if(counter % 20 == 0 || counter == 0){
-		entity_spawn(gs->entities, gs->map);
-	}
 
 	arena_clear(&gs->frameArena);
 

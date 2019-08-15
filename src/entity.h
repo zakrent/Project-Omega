@@ -53,6 +53,18 @@ typedef struct{
 	};
 } Entity;
 
+enum EntityPrefabs{
+	EP_TANK,
+	EP_TURRET,
+
+	COUNT_EP
+};
+
+typedef struct{
+	b32 buildable;
+	Entity entity;
+} EntityPrefab;
+
 typedef struct{
 	u32 generation;
 	union{
@@ -62,6 +74,7 @@ typedef struct{
 } EntityEntry;
 
 typedef struct{
+	EntityPrefab entityPrefabs[COUNT_EP];
 	EntityEntry entities[MAX_ENTITIES];
 	u16 lastEntityIndex;
 } EntitiesData;
@@ -70,6 +83,8 @@ EntityHandle entity_new(EntitiesData *data, Entity newEntity);
 Entity *entity_get(EntitiesData *data, EntityHandle handle);
 void entity_update(EntitiesData *data, Map *map);
 void entity_draw(EntitiesData *data, MemoryArena *frameArena, RenderList *list);
-void entity_spawn(EntitiesData *data, Map *map);
+
+void entity_populate_prefabs(EntitiesData *data);
+void entity_spawn(EntitiesData *data, u32 prefabId, hmm_v2 position);
 
 #endif
