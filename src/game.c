@@ -98,9 +98,9 @@ FRAME(frame){
 	ui_move(gs->uiCtx, -1.75, -0.96);
 	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Frame time               %10.2f ms", currentTime*1000.0);
 	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Highest frame time       %10.2f ms", highestTime*1000.0);
-	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Master arena             %10u bytes used", gs->masterArena.reallyUsed);
-	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Transient arena          %10u bytes used", gs->transientArena.reallyUsed);
-	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Frame arena              %10u bytes used", gs->frameArena.reallyUsed);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Master arena             %10u bytes used", gs->masterArena.used);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Transient arena          %10u bytes used", gs->transientArena.used);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Frame arena              %10u bytes used", gs->frameArena.used);
 	debug_draw(gs->debugCtx, gs->uiCtx, list, &gs->frameArena);
 
 	*_debugCtx = gs->debugCtx;

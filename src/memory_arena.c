@@ -16,19 +16,23 @@ MemoryArena arena_sub_arena(MemoryArena *a, u64 size){
 #endif
 	void *newBase = arena_alloc(a, size);
 	MemoryArena sub = (MemoryArena){.base = newBase, .size = size, .used = 0};
-	a->reallyUsed -= size;
 	return sub;
 }
 
 void *arena_alloc(MemoryArena *a, u64 size){
 	void *firstFreeByte = a->base + a->used;
-	a->used += size;
-	a->reallyUsed += size;
+	void *firstAlignedByte;
+	if((u64)firstFreeByte % 4 == 0){
+		firstAlignedByte = firstFreeByte;
+	}
+	else{
+		firstAlignedByte = firstFreeByte - (u64)firstFreeByte % 4 + 4;
+	}
+	a->used += size+(firstAlignedByte-firstFreeByte);
 	assert(a->size > a->used);	
-	return firstFreeByte;
+	return firstAlignedByte;
 }
 
 void arena_clear(MemoryArena *a){
-	a->reallyUsed = 0;
 	a->used = 0;
 }
