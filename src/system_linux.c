@@ -118,7 +118,7 @@ SYSTEM_GET_PERF_TIME(system_get_perf_time){
 u32 sampleRate = 0;
 void audio_data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount){
 	for(int i = 0; i < frameCount; i++){
-		((r32*)pOutput)[i] = randf(-1.0, 1.0);
+		((r32*)pOutput)[i] = 0.0;//randf(-1.0, 1.0);
 	}
 }
 

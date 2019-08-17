@@ -22,18 +22,36 @@ struct DebugContext *debugCtx;
 #include "entity.h"
 #include "entity.c"
 
+enum GameMode{
+	MODE_MENU,
+	MODE_GAME,
+	COUNT_MODE
+};
+
 typedef struct{
 	b32 initialized;
+	u32 mode;
 	EntitiesData *entities;
 	Map *map;
 	Resources *resources;
 	UIContext *uiCtx;
 	DebugContext *debugCtx;
 	MemoryArena masterArena;
+	MemoryArena modeArena;
 	MemoryArena transientArena;
 	MemoryArena frameArena;
 } GameState;
 
+void game_start_game_mode(GameState *gs){
+	arena_clear(&gs->modeArena);
+	gs->map = arena_alloc_type(&gs->modeArena, Map);
+	map_generate(gs->map, 0);
+
+	gs->entities = arena_alloc_type(&gs->modeArena, EntitiesData);
+	entity_populate_prefabs(gs->entities);
+
+	gs->mode = MODE_GAME;
+}
 
 FRAME(frame){
 	GameState *gs = memory.permanentMemory;
@@ -43,14 +61,9 @@ FRAME(frame){
 
 	if(!gs->initialized){
 		gs->masterArena    = arena_init(memory.permanentMemory+sizeof(GameState), memory.permanentMemorySize-sizeof(GameState));
+		gs->modeArena      = arena_sub_arena(&gs->masterArena, 0.8*gs->masterArena.size);
 		gs->transientArena = arena_init(memory.transientMemory, memory.transientMemorySize);
 		gs->frameArena     = arena_sub_arena(&gs->transientArena, MEGABYTES(8));
-
-		gs->map = arena_alloc_type(&gs->masterArena, Map);
-		map_generate(gs->map, 0);
-
-		gs->entities = arena_alloc_type(&gs->masterArena, EntitiesData);
-		entity_populate_prefabs(gs->entities);
 
 		gs->resources = arena_alloc_type(&gs->transientArena, Resources);
 
@@ -62,49 +75,67 @@ FRAME(frame){
 		systemAPI.system_log(LOG_DEBUG, "GameState initialized");
 	}
 
-
-	static u64 counter = 0;
-	if(counter % 20 == 0 || counter == 0)
-		entity_spawn(gs->entities, EP_TANK, gs->map->waypoints[0]);
-	counter++;
-
-	if(input.LMBChanged && !input.LMBDown){
-		r32 posX = input.mouseX*16.0;
-		posX += 0.5*posX/HMM_ABS(posX);
-		posX = (i32)posX;
-		r32 posY = input.mouseY*16.0;
-		posY += 0.5*posY/HMM_ABS(posY);
-		posY = (i32)posY;
-		entity_spawn(gs->entities, EP_TURRET, HMM_Vec2(posX, posY));
-	}
-
 	arena_clear(&gs->frameArena);
-
-	entity_update(gs->entities, gs->map);
-
-	SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, gs->resources);
-	SpriteSheet fontSheet  = resources_get_sprite_sheet(SS_FONT,  gs->resources);
 
 	RenderList *list = arena_alloc_type(&gs->frameArena, RenderList);
 	*list = (RenderList){0};
 
-	rl_color_clear(&gs->frameArena, list);
+	static u64 counter = 0;
+	counter++;
 
-	rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(16.0, 16.0));
-	rl_use_texture(&gs->frameArena, list, basicSheet);
-	map_draw(gs->map, &gs->frameArena, list);
-	entity_draw(gs->entities, &gs->frameArena, list);
-	
-	rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0));
+	switch(gs->mode){
+		case MODE_MENU:
+			{
+				SpriteSheet fontSheet  = resources_get_sprite_sheet(SS_FONT,  gs->resources);
+				rl_use_texture(&gs->frameArena, list, fontSheet);
+				ui_move(gs->uiCtx, -1.0, 0.0);
+				ui_draw_string(gs->uiCtx, &gs->frameArena, list, 16, "STARTING GAME IN: %f", 5-counter/60.0);
+				if((i32)(counter/60.0) == 5 || input.LMBDown)
+					game_start_game_mode(gs);
 
-	rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(input.mouseX, input.mouseY), HMM_MultiplyVec2f(HMM_Vec2(0.1, 0.1), 1.0+input.LMBDown), HMM_Vec2(22.0, -0.01), HMM_Vec2(1.0,1.0));
+			}
+			break;
+		case MODE_GAME:
+			{
+				if(counter % 20 == 0 || counter == 1)
+					entity_spawn(gs->entities, EP_TANK, gs->map->waypoints[0]);
 
+				if(input.LMBChanged && !input.LMBDown){
+					r32 posX = input.mouseX*16.0;
+					posX += 0.5*posX/HMM_ABS(posX);
+					posX = (i32)posX;
+					r32 posY = input.mouseY*16.0;
+					posY += 0.5*posY/HMM_ABS(posY);
+					posY = (i32)posY;
+					entity_spawn(gs->entities, EP_TURRET, HMM_Vec2(posX, posY));
+				}
+
+				entity_update(gs->entities, gs->map);
+
+				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, gs->resources);
+
+				rl_color_clear(&gs->frameArena, list);
+
+				rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(16.0, 16.0));
+				rl_use_texture(&gs->frameArena, list, basicSheet);
+				map_draw(gs->map, &gs->frameArena, list);
+				entity_draw(gs->entities, &gs->frameArena, list);
+				
+				rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0));
+
+				rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(input.mouseX, input.mouseY), HMM_MultiplyVec2f(HMM_Vec2(0.1, 0.1), 1.0+input.LMBDown), HMM_Vec2(22.0, -0.01), HMM_Vec2(1.0,1.0));
+
+				break;
+			}
+	}
+
+	SpriteSheet fontSheet  = resources_get_sprite_sheet(SS_FONT,  gs->resources);
 	rl_use_texture(&gs->frameArena, list, fontSheet);
 
 	static r32 lastTime;
 	static r32 highestTime;
 	r32 currentTime = systemAPI.time-lastTime;
-	if(currentTime > highestTime && counter > 2)
+	if(currentTime > highestTime)
 		highestTime = currentTime;
 	lastTime = systemAPI.time;
 

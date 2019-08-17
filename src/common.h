@@ -24,7 +24,7 @@ enum {false, true};
 #define TERABYTES(n) (1024LL*GIGABYTES(n))
 
 #ifndef assert
-#define assert(a) if(!(a)){printf("Assertion failed in %s\n", (char *)__func__); *((u8*)0) = 5;}
+#define assert(a) if(!(a)){printf("ASSERTION FAILED in function %s %s:%i\n", (char *)__func__, (char*)__FILE__, __LINE__); *((u8*)0) = 5;}
 #endif
 
 r32 randf(r32 min, r32 max);
