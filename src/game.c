@@ -79,6 +79,7 @@ FRAME(frame){
 
 	RenderList *list = arena_alloc_type(&gs->frameArena, RenderList);
 	*list = (RenderList){0};
+	rl_color_clear(&gs->frameArena, list);
 
 	static u64 counter = 0;
 	counter++;
@@ -88,7 +89,9 @@ FRAME(frame){
 			{
 				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, gs->resources);
 				rl_use_texture(&gs->frameArena, list, basicSheet);
-				rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.5, 1.5), HMM_Vec2(19.0, 6.0), HMM_Vec2(1.0,1.0));
+				for(int i = 0; i < 10000; i++){
+					rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(randf(-2.0, 2.0), randf(-1.0, 1.0)), HMM_Vec2(0.05, 0.05), HMM_Vec2(19.0, 6.0), HMM_Vec2(1.0,1.0));
+				}
 #if 1
 				SpriteSheet fontSheet  = resources_get_sprite_sheet(SS_FONT,  gs->resources);
 				rl_use_texture(&gs->frameArena, list, fontSheet);
@@ -120,8 +123,6 @@ FRAME(frame){
 				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, gs->resources);
 				SpriteSheet unitsSheet = resources_get_sprite_sheet(SS_UNITS, gs->resources);
 
-				rl_color_clear(&gs->frameArena, list);
-
 				rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(12.0, 12.0));
 
 				rl_use_texture(&gs->frameArena, list, basicSheet);
@@ -152,9 +153,10 @@ FRAME(frame){
 	ui_move(gs->uiCtx, -1.75, -0.96);
 	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Frame time               %10.2f ms", currentTime*1000.0);
 	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Highest frame time       %10.2f ms", highestTime*1000.0);
-	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Master arena             %10u bytes used", gs->masterArena.used);
-	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Transient arena          %10u bytes used", gs->transientArena.used);
-	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Frame arena              %10u bytes used", gs->frameArena.used);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Master arena             %10u bytes used", gs->masterArena.used-gs->masterArena.usedBySubArenas);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Mode arena               %10u bytes used", gs->modeArena.used-gs->modeArena.usedBySubArenas);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Transient arena          %10u bytes used", gs->transientArena.used-gs->transientArena.usedBySubArenas);
+	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Frame arena              %10u bytes used", gs->frameArena.used-gs->frameArena.usedBySubArenas);
 	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Mouse X                  %10.2f", input.mouseX);
 	ui_draw_string(gs->uiCtx, &gs->frameArena, list, 4, "Mouse Y                  %10.2f", input.mouseY);
 	debug_draw(gs->debugCtx, gs->uiCtx, list, &gs->frameArena);

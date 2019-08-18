@@ -153,7 +153,7 @@ GLState opengl_state_init(){
 	state.p = HMM_Orthographic(-1.0*16.0/9.0, 1.0*16.0/9.0, 1.0, -1.0, 0.0, 100.0);
 	state.v = HMM_Scale(HMM_Vec3(1.0, 1.0, 1.0));
 
-	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClearColor(0.53, 0.81, 0.92, 0.0);
 
 	return state;
 }

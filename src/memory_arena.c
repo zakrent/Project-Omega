@@ -14,7 +14,9 @@ MemoryArena arena_sub_arena(MemoryArena *a, u64 size){
 #ifndef SYSTEM_LAYER
 	systemAPI.system_log(LOG_DEBUG, "New memory subarena of size %u bytes created", size);
 #endif
+	u64 usedOld = a->used;
 	void *newBase = arena_alloc(a, size);
+	a->usedBySubArenas += a->used-usedOld;
 	MemoryArena sub = (MemoryArena){.base = newBase, .size = size, .used = 0};
 	return sub;
 }

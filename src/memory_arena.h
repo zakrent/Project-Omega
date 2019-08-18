@@ -4,6 +4,7 @@
 typedef struct{
 	void *base;
 	u64 used;
+	u64 usedBySubArenas;
 	u64 size;
 } MemoryArena;
 
