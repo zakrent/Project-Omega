@@ -53,6 +53,9 @@ SpriteSheet resources_get_sprite_sheet(u16 type, Resources *res){
 		case SS_BASIC:
 			file = systemAPI.system_open_file("./res/basic.bmp");
 			break;
+		case SS_UNITS:
+			file = systemAPI.system_open_file("./res/units.bmp");
+			break;
 		case SS_FONT:
 			file = systemAPI.system_open_file("./res/font.bmp");
 			xMulBase = 16.0;

@@ -22,7 +22,7 @@ enum TileType{
 };
 
 #define MAX_TURNS 30
-#define MAP_SIZE_Y 31
+#define MAP_SIZE_Y 21
 #define MAP_SIZE_X 41
 
 typedef struct{

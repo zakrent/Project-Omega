@@ -43,7 +43,7 @@ void entity_follow_path(Entity *e, PathFollowerData *data, Map *map){
 			{
 				hmm_v2 direction = HMM_SubtractVec2(data->waypoint, e->pos);
 				//r32 distance = HMM_LengthVec2(direction);
-				r32 angleDelta = HMM_Clamp(-0.08, HMM_ATan2F(direction.Y, direction.X) - e->rotation, 0.08);
+				r32 angleDelta = HMM_Clamp(-0.02, HMM_ATan2F(direction.Y, direction.X) - e->rotation, 0.02);
 				if(HMM_ABS(angleDelta) <= 0.001){
 					data->state = 2;
 				}
@@ -56,7 +56,7 @@ void entity_follow_path(Entity *e, PathFollowerData *data, Map *map){
 		case 2:
 			{
 				r32 distance = HMM_LengthVec2(HMM_SubtractVec2(data->waypoint, e->pos));
-				hmm_v2 vel = HMM_MultiplyMat4ByVec4(HMM_Rotate(e->rotation, HMM_Vec3(0.0, 0.0, 1.0)), HMM_Vec4(0.05, 0.0, 0.0, 1.0)).XY;
+				hmm_v2 vel = HMM_MultiplyMat4ByVec4(HMM_Rotate(e->rotation, HMM_Vec3(0.0, 0.0, 1.0)), HMM_Vec4(0.03, 0.0, 0.0, 1.0)).XY;
 				hmm_v2 newPos = HMM_AddVec2(e->pos, vel);
 				r32 newDistance = HMM_LengthVec2(HMM_SubtractVec2(data->waypoint, newPos));
 				if(newDistance > distance){
@@ -208,17 +208,18 @@ void entity_draw(EntitiesData *data, MemoryArena *frameArena, RenderList *list){
 		EntityEntry *entry = data->entities+i;
 		if(entry->valid){
 			Entity *e = &entry->entity;
+			const static float scalingFactor = 0.15;
 			switch(e->type){
 				case ENTITY_TANK:
-					rl_draw_sprite(frameArena, list, e->pos, e->rotation, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(16.0, 11.0), HMM_Vec2(1.0, 1.0));
-					rl_draw_sprite(frameArena, list, e->pos, e->rotation+e->tankData.turretRotation, HMM_Vec2(0.08, 0.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(16.0, 12.0), HMM_Vec2(1.0, 1.0));
+					rl_draw_sprite(frameArena, list, e->pos, e->rotation, HMM_Vec2(0.0, 0.0), HMM_Vec2(13.0*scalingFactor, 5.0*scalingFactor), HMM_Vec2(0.0, 34.0), HMM_Vec2(13.0, 5.0));
+					rl_draw_sprite(frameArena, list, e->pos, e->rotation+e->tankData.turretRotation, HMM_Vec2(1.0*scalingFactor, 0.0), HMM_Vec2(7.0*scalingFactor, 5.0*scalingFactor), HMM_Vec2(13.0, 34.0), HMM_Vec2(7.0, 5.0));
 					break;
 				case ENTITY_TURRET:
-					rl_draw_sprite(frameArena, list, e->pos, 0.0, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(20.0, 7.0), HMM_Vec2(1.0, 1.0));
-					rl_draw_sprite(frameArena, list, e->pos, e->rotation+HMM_PI32*0.5, HMM_Vec2(0.0, -0.2), HMM_Vec2(1.0, 1.0), HMM_Vec2(20.0, 10.0), HMM_Vec2(1.0, 1.0));
+					rl_draw_sprite(frameArena, list, e->pos, e->rotation, HMM_Vec2(1.0*scalingFactor, 0.0), HMM_Vec2(7.0*scalingFactor, 5.0*scalingFactor), HMM_Vec2(0.0, 0.0), HMM_Vec2(7.0, 5.0));
+					//rl_draw_sprite(frameArena, list, e->pos, e->rotation+HMM_PI32*0.5, HMM_Vec2(0.0, -0.2), HMM_Vec2(1.0, 1.0), HMM_Vec2(20.0, 10.0), HMM_Vec2(1.0, 1.0));
 					break;
 				case ENTITY_PROJECTILE:
-					rl_draw_sprite(frameArena, list, e->pos, e->rotation, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(19.0, 11.0), HMM_Vec2(1.0, 1.0));
+					//rl_draw_sprite(frameArena, list, e->pos, e->rotation, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0), HMM_Vec2(19.0, 11.0), HMM_Vec2(1.0, 1.0));
 					break;
 				default:
 					break;

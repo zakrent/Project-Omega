@@ -153,7 +153,7 @@ GLState opengl_state_init(){
 	state.p = HMM_Orthographic(-1.0*16.0/9.0, 1.0*16.0/9.0, 1.0, -1.0, 0.0, 100.0);
 	state.v = HMM_Scale(HMM_Vec3(1.0, 1.0, 1.0));
 
-	glClearColor(1.0, 0.0, 1.0, 0.0);
+	glClearColor(0.0, 0.0, 0.0, 0.0);
 
 	return state;
 }
@@ -173,8 +173,8 @@ void opengl_draw_buffered_sprites(GLState state, u32 n, RLDrawSprite **sprites){
 	for(int i = 0; i < n; i++){
 		RLDrawSprite *rlDrawSprite = sprites[i];
 		spriteMVP[i] = HMM_MultiplyMat4(state.p, HMM_MultiplyMat4(state.v, rlDrawSprite->model));
-		spriteSizeX[i] = rlDrawSprite->spriteSize.X*state.texXMul-state.texXOffset;
-		spriteSizeY[i] = rlDrawSprite->spriteSize.Y*state.texYMul-state.texYOffset;
+		spriteSizeX[i] = rlDrawSprite->spriteSize.X*state.texXMul-2.0*state.texXOffset;
+		spriteSizeY[i] = rlDrawSprite->spriteSize.Y*state.texYMul-2.0*state.texYOffset;
 		spritePosX[i]  = rlDrawSprite->spritePos.X*state.texXMul+state.texXOffset;
 		spritePosY[i]  = rlDrawSprite->spritePos.Y*state.texYMul+state.texYOffset;
 	}
@@ -199,23 +199,18 @@ void opengl_render_list(RenderList *renderList, GLState state){
 	r32 aspectRatio = wWidth/wHeight;
 	state.p = HMM_Orthographic(-1.0*aspectRatio, 1.0*aspectRatio, 1.0, -1.0, 0.0, 100.0);
 
-	//Create framebuffer to render to
+	//Create framebuffer for multisampling
 	GLuint fbo;
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
 	GLuint fboTexture;
 	glGenTextures(1, &fboTexture);
-	glBindTexture(GL_TEXTURE_2D, fboTexture);
-	  
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, wWidth*4.0, wHeight*4.0, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, fboTexture);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 16, GL_RGBA8, wWidth, wHeight, false);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);  
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, fboTexture, 0);
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fboTexture, 0);
-
-	glViewport(0, 0, wWidth*4.0, wHeight*4.0);
 	//Use correct shaders
 	glUseProgram(state.spriteShader);
 
@@ -268,7 +263,16 @@ void opengl_render_list(RenderList *renderList, GLState state){
 
 	opengl_draw_buffered_sprites(state, bufferedSprites, sprites);
 
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+	glDrawBuffer(GL_BACK);
+	glBlitFramebuffer(0, 0, wWidth, wHeight, 0, 0, wWidth, wHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+	glDeleteFramebuffers(1, &fbo);
+	glDeleteTextures(1, &fboTexture);
+
 	//Render and delete framebuffer
+	/*
 	glViewport(0, 0, wWidth*1.0, wHeight*1.0);
 	glBindBuffer(GL_ARRAY_BUFFER, state.textureVBO);
 	glBufferData(GL_ARRAY_BUFFER, 12 * sizeof(float), defaultTexturePoints, GL_STREAM_DRAW);
@@ -281,7 +285,6 @@ void opengl_render_list(RenderList *renderList, GLState state){
 	glBindTexture(GL_TEXTURE_2D, fboTexture);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
-	glDeleteFramebuffers(1, &fbo);
-	glDeleteTextures(1, &fboTexture);
+	*/
 	DEBUG_TIMER_STOP();
 }

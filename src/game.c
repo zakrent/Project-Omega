@@ -86,25 +86,30 @@ FRAME(frame){
 	switch(gs->mode){
 		case MODE_MENU:
 			{
+				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, gs->resources);
+				rl_use_texture(&gs->frameArena, list, basicSheet);
+				rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.5, 1.5), HMM_Vec2(19.0, 6.0), HMM_Vec2(1.0,1.0));
+#if 1
 				SpriteSheet fontSheet  = resources_get_sprite_sheet(SS_FONT,  gs->resources);
 				rl_use_texture(&gs->frameArena, list, fontSheet);
 				ui_move(gs->uiCtx, -1.0, 0.0);
 				ui_draw_string(gs->uiCtx, &gs->frameArena, list, 16, "STARTING GAME IN: %f", 5-counter/60.0);
 				if((i32)(counter/60.0) == 5 || input.LMBDown)
 					game_start_game_mode(gs);
+#endif
 
 			}
 			break;
 		case MODE_GAME:
 			{
-				if(counter % 20 == 0 || counter == 1)
+				if(counter % 120 == 0 || counter == 1)
 					entity_spawn(gs->entities, EP_TANK, gs->map->waypoints[0]);
 
 				if(input.LMBChanged && !input.LMBDown){
-					r32 posX = input.mouseX*16.0;
+					r32 posX = input.mouseX*12.0;
 					posX += 0.5*posX/HMM_ABS(posX);
 					posX = (i32)posX;
-					r32 posY = input.mouseY*16.0;
+					r32 posY = input.mouseY*12.0;
 					posY += 0.5*posY/HMM_ABS(posY);
 					posY = (i32)posY;
 					entity_spawn(gs->entities, EP_TURRET, HMM_Vec2(posX, posY));
@@ -113,16 +118,21 @@ FRAME(frame){
 				entity_update(gs->entities, gs->map);
 
 				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, gs->resources);
+				SpriteSheet unitsSheet = resources_get_sprite_sheet(SS_UNITS, gs->resources);
 
 				rl_color_clear(&gs->frameArena, list);
 
-				rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(16.0, 16.0));
+				rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(12.0, 12.0));
+
 				rl_use_texture(&gs->frameArena, list, basicSheet);
 				map_draw(gs->map, &gs->frameArena, list);
+
+				rl_use_texture(&gs->frameArena, list, unitsSheet);
 				entity_draw(gs->entities, &gs->frameArena, list);
 				
 				rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0));
 
+				rl_use_texture(&gs->frameArena, list, basicSheet);
 				rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(input.mouseX, input.mouseY), HMM_MultiplyVec2f(HMM_Vec2(0.1, 0.1), 1.0+input.LMBDown), HMM_Vec2(22.0, -0.01), HMM_Vec2(1.0,1.0));
 
 				break;
