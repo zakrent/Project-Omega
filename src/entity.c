@@ -23,7 +23,7 @@ Entity *entity_get(EntitiesData *data, EntityHandle handle){
 	return NULL;
 }
 
-void entity_follow_path(Entity *e, PathFollowerData *data, Map *map){
+void entity_follow_path(Entity *e, PathFollowerData *data, Map *map, r32 maxSpeed, r32 acceleration){
 	switch(data->state){
 		//find waypoint
 		case 0:
@@ -55,11 +55,27 @@ void entity_follow_path(Entity *e, PathFollowerData *data, Map *map){
 		//go to waypoint
 		case 2:
 			{
+
 				r32 distance = HMM_LengthVec2(HMM_SubtractVec2(data->waypoint, e->pos));
-				hmm_v2 vel = HMM_MultiplyMat4ByVec4(HMM_Rotate(e->rotation, HMM_Vec3(0.0, 0.0, 1.0)), HMM_Vec4(0.03, 0.0, 0.0, 1.0)).XY;
+
+				r32 breakingDistance = (data->speed*data->speed)/(2*acceleration);
+
+				if(breakingDistance > distance){
+					data->speed -= acceleration;
+					if(data->speed < 0.001)
+						data->speed = 0.001;
+				}
+				else{
+					data->speed += acceleration;
+					if(data->speed > maxSpeed)
+						data->speed = maxSpeed;
+				}
+
+				hmm_v2 vel = HMM_MultiplyMat4ByVec4(HMM_Rotate(e->rotation, HMM_Vec3(0.0, 0.0, 1.0)), HMM_Vec4(data->speed, 0.0, 0.0, 1.0)).XY;
 				hmm_v2 newPos = HMM_AddVec2(e->pos, vel);
 				r32 newDistance = HMM_LengthVec2(HMM_SubtractVec2(data->waypoint, newPos));
 				if(newDistance > distance){
+					data->speed = 0.0;
 					data->state = 0;
 				}
 				else{
@@ -134,7 +150,7 @@ void entity_update(EntitiesData *data, Map *map){
 						if(e->health <= 0.0){
 							e->valid = false;
 						}
-						entity_follow_path(e, &e->tankData.pathFollowerData, map);
+						entity_follow_path(e, &e->tankData.pathFollowerData, map, 0.03, 0.0003);
 						b32 hasTarget;
 						r32 targetBearing = entity_target_bearing(e, data, &e->tankData.shooterData, false, &hasTarget);
 						if(hasTarget){

@@ -105,7 +105,7 @@ FRAME(frame){
 			break;
 		case MODE_GAME:
 			{
-				if(counter % 120 == 0 || counter == 1)
+				if(counter % 240 == 0 || counter == 1)
 					entity_spawn(gs->entities, EP_TANK, gs->map->waypoints[0]);
 
 				if(input.LMBChanged && !input.LMBDown){

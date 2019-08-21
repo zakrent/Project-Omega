@@ -19,6 +19,7 @@ typedef struct{
 typedef struct{
 	u8 state;
 	u8 waypointNumber;
+	r32 speed;
 	hmm_v2 waypoint;
 } PathFollowerData;
 
