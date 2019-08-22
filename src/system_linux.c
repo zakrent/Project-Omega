@@ -180,7 +180,7 @@ int main(){
 	}
 
 	//Init opengl system
-	GLState glState = opengl_state_init();
+	ZGLState glState = opengl_state_init();
 
 	System systemAPI = (System){
 		.system_log              = system_log,

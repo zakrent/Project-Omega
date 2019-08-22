@@ -7,7 +7,6 @@ enum RLEntryType{
 	RL_COLOR_CLEAR,
 
 	RL_USE_TEXTURE,
-//	RL_USE_SHADER,
 
 	RL_SET_CAMERA,
 
@@ -44,7 +43,6 @@ typedef struct{
 }RLSetCamera;
 
 typedef struct{
-	r32 rotation;
 	hmm_v2 spritePos;
 	hmm_v2 spriteSize;
 	hmm_m4 model;
