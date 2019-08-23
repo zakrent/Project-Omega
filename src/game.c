@@ -77,6 +77,29 @@ FRAME(frame){
 
 	arena_clear(&gs->frameArena);
 
+	SoundBuffer *soundBuffer = systemAPI.soundBuffer;
+	for(int i = 0; i < 2048; i++){
+		soundBuffer->data[soundBuffer->writePosition] = sin(soundBuffer->soundTime*2.0*HMM_PI*5000);
+		soundBuffer->writePosition++;
+		if(soundBuffer->writePosition >= SOUND_BUFFER_SIZE){
+			soundBuffer->writePosition = 0;
+		}
+		soundBuffer->soundTime += 1.0/soundBuffer->sampleRate;
+		u32 writeDistance = 0;
+		if(soundBuffer->writePosition > soundBuffer->readPosition){
+			writeDistance = soundBuffer->writePosition - soundBuffer->readPosition;
+		}
+		else{
+			writeDistance = (SOUND_BUFFER_SIZE - soundBuffer->readPosition) + soundBuffer->writePosition;
+		}
+		assert(soundBuffer->readPosition != soundBuffer->writePosition);
+		if(writeDistance > 2048)
+			break;
+	}
+	if(!soundBuffer->soundStarted){
+		soundBuffer->soundStarted = true;
+	}
+
 	RenderList *list = arena_alloc_type(&gs->frameArena, RenderList);
 	*list = (RenderList){0};
 	rl_color_clear(&gs->frameArena, list);

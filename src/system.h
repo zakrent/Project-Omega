@@ -29,8 +29,20 @@ typedef SYSTEM_GENERATE_TEXTURE(SystemGenerateTexture);
 #define SYSTEM_GET_PERF_TIME(name) u64 name()
 typedef SYSTEM_GET_PERF_TIME(SystemGetPerfTime);
 
+#define SOUND_BUFFER_SIZE 4096
+
+typedef struct{
+	r64 soundTime;
+	b32 soundStarted;
+	u32 writePosition;
+	u32 readPosition;
+	u32 sampleRate;
+	r32 data[SOUND_BUFFER_SIZE];
+} SoundBuffer;
+
 typedef struct{
 	r32 time;
+	SoundBuffer *soundBuffer;
 	SystemLog             *system_log;
 	SystemOpenFile        *system_open_file;
 	SystemCloseFile       *system_close_file;

@@ -57,6 +57,19 @@ void die(const char *fmt, ...){
 	exit(EXIT_FAILURE);
 }
 
+SoundBuffer soundBuffer;
+void audio_data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount){
+	if(soundBuffer.soundStarted){
+		for(int i = 0; i < frameCount; i++){
+			((r32*)pOutput)[i] = soundBuffer.data[soundBuffer.readPosition++];
+			if(soundBuffer.readPosition >= SOUND_BUFFER_SIZE){
+				soundBuffer.readPosition = 0;
+			}
+			assert(soundBuffer.readPosition != soundBuffer.writePosition);
+		}
+	}
+}
+
 SYSTEM_LOG(system_log){
 	time_t rawtime;
 	struct tm *timeinfo;
@@ -113,13 +126,6 @@ SYSTEM_GET_PERF_TIME(system_get_perf_time){
 	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time);
 	u64 unitedTime = time.tv_sec * (u64)1e9 + time.tv_nsec;
 	return unitedTime;
-}
-
-u32 sampleRate = 0;
-void audio_data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount){
-	for(int i = 0; i < frameCount; i++){
-		((r32*)pOutput)[i] = 0.0;//randf(-1.0, 1.0);
-	}
 }
 
 int main(){
@@ -183,6 +189,7 @@ int main(){
 	ZGLState glState = opengl_state_init();
 
 	System systemAPI = (System){
+		.soundBuffer = &soundBuffer,
 		.system_log              = system_log,
 		.system_open_file        = system_open_file,
 		.system_close_file       = system_close_file,
@@ -191,15 +198,16 @@ int main(){
 	};
 
 	//Init audio (hopefully)
+
 	ma_result result;
 	ma_device device;
-	sampleRate = ma_get_best_sample_rate_within_range(40000,48000);
+	soundBuffer.sampleRate = ma_get_best_sample_rate_within_range(40000,48000);
 
 	ma_device_config config = ma_device_config_init(ma_device_type_playback);
 	config.playback.pDeviceID = NULL;
 	config.playback.format    = ma_format_f32;
 	config.playback.channels  = 1;
-	config.sampleRate         = sampleRate;
+	config.sampleRate         = soundBuffer.sampleRate;
 	config.dataCallback       = audio_data_callback;
 	//config.pUserData          = &myUserData;
 
