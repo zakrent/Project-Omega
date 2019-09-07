@@ -65,7 +65,8 @@ void audio_data_callback(ma_device* pDevice, void* pOutput, const void* pInput, 
 			if(soundBuffer.readPosition >= SOUND_BUFFER_SIZE){
 				soundBuffer.readPosition = 0;
 			}
-			assert(soundBuffer.readPosition != soundBuffer.writePosition);
+			//TODO: fix sound system bugs
+			//assert(soundBuffer->readPosition != soundBuffer->writePosition);
 		}
 	}
 }
@@ -194,6 +195,7 @@ int main(){
 		.system_open_file        = system_open_file,
 		.system_close_file       = system_close_file,
 		.system_generate_texture = opengl_generate_texture,
+		.system_generate_shader  = opengl_generate_shader,
 		.system_get_perf_time    = system_get_perf_time,
 	};
 

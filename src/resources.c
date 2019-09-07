@@ -37,8 +37,33 @@ typedef struct{
 } __attribute__((packed)) BMPHeader;
 
 Shader resources_get_shader(u16 type, Resources *res){
-	assert(0);
-	return (Shader){0};
+	if(res->shaders[type].valid){
+		return res->shaders[type];
+	}
+	systemAPI.system_log(LOG_DEBUG, "Loading shader id: %u", type);
+	File vssFile;
+	File fssFile;
+	switch(type){
+		case SHADER_SPRITE:
+			vssFile = systemAPI.system_open_file("./data/shaders/sprite.vs");
+			fssFile = systemAPI.system_open_file("./data/shaders/sprite.fs");
+			break;
+		default:
+			break;
+	}
+	if(!vssFile.valid || !fssFile.valid){
+		systemAPI.system_log(LOG_ERROR, "Invalid shader source file");
+		systemAPI.system_close_file(vssFile);
+		systemAPI.system_close_file(fssFile);
+	}
+	else{
+		systemAPI.system_log(LOG_DEBUG, "Valid shader file");
+		res->shaders[type] = (Shader){
+			.valid = true,
+			.handle = systemAPI.system_generate_shader(vssFile.content, fssFile.content),
+		};
+	}
+	return res->shaders[type];
 }
 
 SpriteSheet resources_get_sprite_sheet(u16 type, Resources *res){
@@ -51,13 +76,13 @@ SpriteSheet resources_get_sprite_sheet(u16 type, Resources *res){
 	r32 yMulBase = 64.0;
 	switch(type){
 		case SS_BASIC:
-			file = systemAPI.system_open_file("./res/basic.bmp");
+			file = systemAPI.system_open_file("./data/sprites/basic.bmp");
 			break;
 		case SS_UNITS:
-			file = systemAPI.system_open_file("./res/units.bmp");
+			file = systemAPI.system_open_file("./data/sprites/units.bmp");
 			break;
 		case SS_FONT:
-			file = systemAPI.system_open_file("./res/font.bmp");
+			file = systemAPI.system_open_file("./data/sprites/font.bmp");
 			xMulBase = 16.0;
 			yMulBase = 32.0;
 			break;

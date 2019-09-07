@@ -16,7 +16,6 @@ typedef struct ZGLSprite ZGLSprite;
 #define SPRITE_BUFFER_SIZE 1024
 typedef struct{
 	GLuint VBO;
-	GLuint spriteShader;
 	GLuint msaaFBO;
 	GLuint msaaTexture;
 	r32 texXMul;

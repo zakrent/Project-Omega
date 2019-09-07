@@ -25,6 +25,13 @@ void rl_use_texture(MemoryArena* frameArena, RenderList *list, SpriteSheet sheet
 	header->data = (void *)data;
 }
 
+void rl_use_shader(MemoryArena* frameArena, RenderList *list, Shader shader){
+	RLEntryHeader *header = rl_new_entry(frameArena, list, RL_USE_SHADER);
+	RLUseShader *data = arena_alloc_type(frameArena, RLUseShader);
+	*data = (RLUseShader){.handle = shader.handle};
+	header->data = (void *)data;
+}
+
 void rl_set_camera(MemoryArena* frameArena, RenderList *list, hmm_vec2 pos, hmm_vec2 size){
 	RLEntryHeader *header = rl_new_entry(frameArena, list, RL_SET_CAMERA);
 	RLSetCamera *data = arena_alloc_type(frameArena, RLSetCamera);

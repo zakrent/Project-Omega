@@ -1,45 +1,6 @@
 #include "opengl_renderer.h"
 #include "render_list.h"
 
-const char* spriteVertexShader =
-"#version 400\n"
-"layout(location = 0) in vec2 position;"
-"layout(location = 1) in vec2 texture;"
-"out vec2 Texture;"
-"void main() {"
-"  Texture = vec2(texture.x, texture.y);"
-"  gl_Position = vec4(position.x, position.y, 0.0, 1.0);"
-"}";
-
-const char* spriteFragmentShader =
-"#version 400\n"
-"in vec2 Texture;"
-"out vec4 color;"
-"uniform sampler2D spriteSheet;"
-"void main() {"
-"  color = texture(spriteSheet, vec2(Texture.x, Texture.y));"
-"}";
-
-const char* basicVertexShader =
-"#version 400\n"
-"layout(location = 0) in vec2 vp;"
-"layout(location = 1) in vec2 texCord;"
-"out vec2 TexCord;"
-"void main() {"
-"  TexCord = texCord;"
-"  gl_Position = vec4(vp, 0.0, 1.0);"
-"}";
-
-const char* basicFragmentShader =
-"#version 400\n"
-"in vec2 TexCord;"
-"out vec4 frag_colour;"
-"uniform sampler2D tex;"
-"void main() {"
-"  vec4 texVal = texture(tex, TexCord);"
-"  frag_colour = texVal;"
-"}";
-
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity,
 	GLsizei length, const GLchar* message, const void* userParam ){
 	fprintf( stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
@@ -61,7 +22,7 @@ SYSTEM_GENERATE_TEXTURE(opengl_generate_texture){
 	return handle;
 }
 
-GLuint opengl_create_shader(const char *vss, const char *fss){
+SYSTEM_GENERATE_SHADER(opengl_generate_shader){
 	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vs, 1, &vss, NULL);
 	glCompileShader(vs);
@@ -104,8 +65,6 @@ ZGLState opengl_state_init(){
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 
-	state.spriteShader = opengl_create_shader(spriteVertexShader, spriteFragmentShader);
-
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -142,9 +101,6 @@ void opengl_render_list(RenderList *renderList, ZGLState state){
 
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, fboTexture, 0);
 
-	//Use correct shader
-	glUseProgram(state.spriteShader);
-
 	//Draw render list
 	u32 bufferedSprites = 0;
 	ZGLSprite sprites[SPRITE_BUFFER_SIZE];
@@ -170,6 +126,12 @@ void opengl_render_list(RenderList *renderList, ZGLState state){
 					state.texYMul = rlUseTexture->yMul;
 					state.texXOffset = rlUseTexture->xOffset;
 					state.texYOffset = rlUseTexture->yOffset;
+					break;
+				}
+			case RL_USE_SHADER:
+				{
+					RLUseShader *rlUseShader = header->data;
+					glUseProgram(rlUseShader->handle);
 					break;
 				}
 			case RL_SET_CAMERA:

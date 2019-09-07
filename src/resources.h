@@ -25,7 +25,7 @@ typedef struct{
 enum Shaders{
 	SHADER_INVALID,
 
-	SHADER_BASIC,
+	SHADER_SPRITE,
 
 	COUNT_SHADERS
 };

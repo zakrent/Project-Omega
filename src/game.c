@@ -92,7 +92,8 @@ FRAME(frame){
 		else{
 			writeDistance = (SOUND_BUFFER_SIZE - soundBuffer->readPosition) + soundBuffer->writePosition;
 		}
-		assert(soundBuffer->readPosition != soundBuffer->writePosition);
+		//TODO: fix sound system bugs
+		//assert(soundBuffer->readPosition != soundBuffer->writePosition);
 		if(writeDistance > 2048)
 			break;
 	}
@@ -103,6 +104,9 @@ FRAME(frame){
 	RenderList *list = arena_alloc_type(&gs->frameArena, RenderList);
 	*list = (RenderList){0};
 	rl_color_clear(&gs->frameArena, list);
+
+	Shader spriteShader = resources_get_shader(SHADER_SPRITE, gs->resources);
+	rl_use_shader(&gs->frameArena, list, spriteShader);
 
 	static u64 counter = 0;
 	counter++;
