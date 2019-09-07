@@ -21,14 +21,14 @@ MemoryArena arena_sub_arena(MemoryArena *a, u64 size){
 	return sub;
 }
 
-void *arena_alloc(MemoryArena *a, u64 size){
+void *arena_alloca(MemoryArena *a, u64 size, u8 alignment){
 	void *firstFreeByte = a->base + a->used;
 	void *firstAlignedByte;
-	if((u64)firstFreeByte % 4 == 0){
+	if((u64)firstFreeByte % alignment == 0){
 		firstAlignedByte = firstFreeByte;
 	}
 	else{
-		firstAlignedByte = firstFreeByte - (u64)firstFreeByte % 4 + 4;
+		firstAlignedByte = firstFreeByte - (u64)firstFreeByte % alignment + alignment;
 	}
 	a->used += size+(firstAlignedByte-firstFreeByte);
 	assert(a->size > a->used);	
