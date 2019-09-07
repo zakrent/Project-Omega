@@ -22,8 +22,8 @@ enum TileType{
 };
 
 #define MAX_TURNS 30
-#define MAP_SIZE_Y 21
-#define MAP_SIZE_X 41
+#define MAP_SIZE_Y 18
+#define MAP_SIZE_X 30
 
 typedef struct{
 	u8 tile[MAP_SIZE_X][MAP_SIZE_Y];

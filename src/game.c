@@ -79,7 +79,7 @@ FRAME(frame){
 
 	SoundBuffer *soundBuffer = systemAPI.soundBuffer;
 	for(int i = 0; i < 2048; i++){
-		soundBuffer->data[soundBuffer->writePosition] = sin(soundBuffer->soundTime*2.0*HMM_PI*5000);
+		soundBuffer->data[soundBuffer->writePosition] = 0.0;
 		soundBuffer->writePosition++;
 		if(soundBuffer->writePosition >= SOUND_BUFFER_SIZE){
 			soundBuffer->writePosition = 0;
@@ -110,17 +110,15 @@ FRAME(frame){
 	switch(gs->mode){
 		case MODE_MENU:
 			{
-				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, gs->resources);
+				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_UNITS, gs->resources);
 				rl_use_texture(&gs->frameArena, list, basicSheet);
-				for(int i = 0; i < 10000; i++){
-					rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(randf(-2.0, 2.0), randf(-1.0, 1.0)), HMM_Vec2(0.05, 0.05), HMM_Vec2(19.0, 6.0), HMM_Vec2(1.0,1.0));
-				}
+				rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(randf(-0.0, 0.0), randf(-0.0, 0.0)), HMM_Vec2(1.3, 0.6), HMM_Vec2(0.0, 17.0), HMM_Vec2(13.0,6.0));
 #if 1
 				SpriteSheet fontSheet  = resources_get_sprite_sheet(SS_FONT,  gs->resources);
 				rl_use_texture(&gs->frameArena, list, fontSheet);
 				ui_move(gs->uiCtx, -1.0, 0.0);
-				ui_draw_string(gs->uiCtx, &gs->frameArena, list, 16, "STARTING GAME IN: %f", 5-counter/60.0);
-				if((i32)(counter/60.0) == 5 || input.LMBDown)
+				ui_draw_string(gs->uiCtx, &gs->frameArena, list, 16, "STARTING GAME IN: %f", 2-counter/60.0);
+				if((i32)(counter/60.0) == 2 || input.LMBDown)
 					game_start_game_mode(gs);
 #endif
 
@@ -132,10 +130,10 @@ FRAME(frame){
 					entity_spawn(gs->entities, EP_TANK, gs->map->waypoints[0]);
 
 				if(input.LMBChanged && !input.LMBDown){
-					r32 posX = input.mouseX*12.0;
+					r32 posX = input.mouseX*9.0;
 					posX += 0.5*posX/HMM_ABS(posX);
 					posX = (i32)posX;
-					r32 posY = input.mouseY*12.0;
+					r32 posY = input.mouseY*9.0;
 					posY += 0.5*posY/HMM_ABS(posY);
 					posY = (i32)posY;
 					entity_spawn(gs->entities, EP_TURRET, HMM_Vec2(posX, posY));
@@ -146,7 +144,7 @@ FRAME(frame){
 				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, gs->resources);
 				SpriteSheet unitsSheet = resources_get_sprite_sheet(SS_UNITS, gs->resources);
 
-				rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(12.0, 12.0));
+				rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(9.0, 9.0));
 
 				rl_use_texture(&gs->frameArena, list, basicSheet);
 				map_draw(gs->map, &gs->frameArena, list);

@@ -17,6 +17,8 @@ typedef struct ZGLSprite ZGLSprite;
 typedef struct{
 	GLuint VBO;
 	GLuint spriteShader;
+	GLuint msaaFBO;
+	GLuint msaaTexture;
 	r32 texXMul;
 	r32 texYMul;
 	r32 texXOffset;

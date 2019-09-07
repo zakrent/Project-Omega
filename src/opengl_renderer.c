@@ -56,8 +56,8 @@ SYSTEM_GENERATE_TEXTURE(opengl_generate_texture){
 			              GL_UNSIGNED_BYTE, data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	return handle;
 }
 
@@ -129,6 +129,18 @@ void opengl_render_list(RenderList *renderList, ZGLState state){
 	r32 wHeight = windowSizeData[3];
 	r32 aspectRatio = wWidth/wHeight;
 	state.p = HMM_Orthographic(-1.0*aspectRatio, 1.0*aspectRatio, 1.0, -1.0, 0.0, 100.0);
+
+	//Create framebuffer for multisampling
+	GLuint fbo;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	GLuint fboTexture;
+	glGenTextures(1, &fboTexture);
+	glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, fboTexture);
+	glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 16, GL_RGBA8, wWidth, wHeight, false);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, fboTexture, 0);
 
 	//Use correct shader
 	glUseProgram(state.spriteShader);
@@ -207,6 +219,14 @@ void opengl_render_list(RenderList *renderList, ZGLState state){
 
 	glBufferSubData(GL_ARRAY_BUFFER, 0, bufferedSprites*sizeof(ZGLSprite), sprites);
 	glDrawArrays(GL_TRIANGLES, 0, bufferedSprites*6);
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+	glDrawBuffer(GL_BACK);
+	glBlitFramebuffer(0, 0, wWidth, wHeight, 0, 0, wWidth, wHeight, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+
+	glDeleteFramebuffers(1, &fbo);
+	glDeleteTextures(1, &fboTexture);
 
 	DEBUG_TIMER_STOP();
 }
