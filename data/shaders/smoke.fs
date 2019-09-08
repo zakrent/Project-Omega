@@ -1,6 +1,7 @@
 #version 400
 in vec2 Position;
 in vec2 Texture;
+in float Time;
 out vec4 color;
 uniform sampler2D spriteSheet;
 uniform float realTime;
@@ -34,7 +35,9 @@ float noise(in vec2 st) {
 }
 
 void main() {
-	float noiseVal = 1.0-0.25*noise(Position*2.0)-0.3*rand(Position);
+	float noiseVal = 0.8*noise(Position*10+vec2(0.0, -2.0*realTime))*noise(Position*15.0+vec2(0.0, -2.0*realTime))+0.2*rand(Position);
+	float intensity = texture(spriteSheet, vec2(Texture.x, Texture.y)).a;
+	float colorIntensity = mix(0.5, 1.0, noiseVal);
+	color = intensity*vec4(0.5*colorIntensity, 0.5*colorIntensity, 0.5*colorIntensity, (1.0 - pow(Time/480.0, 2))*mix(0.5, 1.0, noiseVal));
 	//color = vec4(noiseVal, noiseVal, noiseVal, 1.0);
-	color = texture(spriteSheet, vec2(Texture.x, Texture.y))*vec4(noiseVal, noiseVal, noiseVal, 1.0);
 }

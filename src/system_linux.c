@@ -246,7 +246,7 @@ int main(){
 		RenderList *renderList;
 		frame(memory, input, systemAPI, &renderList, &debugCtx);
 		
-		opengl_render_list(renderList, glState);
+		opengl_render_list(renderList, glState, frameStart);
 
         glfwSwapBuffers(window);
 		glfwPollEvents();

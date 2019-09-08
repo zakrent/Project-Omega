@@ -18,6 +18,7 @@ struct DebugContext *debugCtx;
 #include "ui.c"
 #include "debug.c"
 #include "game.h"
+#include "particle.c"
 #include "map.c"
 #include "entity.h"
 #include "entity.c"
@@ -32,6 +33,7 @@ typedef struct{
 	b32 initialized;
 	u32 mode;
 	EntitiesData *entities;
+	ParticleSystem *particleSystem;
 	Map *map;
 	Resources *resources;
 	UIContext *uiCtx;
@@ -70,6 +72,8 @@ FRAME(frame){
 		gs->debugCtx = arena_alloc_type(&gs->transientArena, DebugContext);
 
 		gs->uiCtx = arena_alloc_type(&gs->masterArena, UIContext);
+
+		gs->particleSystem = arena_alloc_type(&gs->masterArena, ParticleSystem); 
 
 		gs->initialized = true;
 		systemAPI.system_log(LOG_DEBUG, "GameState initialized");
@@ -116,14 +120,14 @@ FRAME(frame){
 
 				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_MAP, gs->resources);
 				rl_use_texture(&gs->frameArena, list, basicSheet);
-				rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(-1.0, 0.0), HMM_Vec2(2.0, 2.0), HMM_Vec2(6.0, 6.0), HMM_Vec2(1.0,1.0));
-				rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(1.0, 0.0), HMM_Vec2(2.0, 2.0), HMM_Vec2(6.0, 6.0), HMM_Vec2(1.0,1.0));
+				rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(-1.0, 0.0), HMM_Vec2(2.0, 2.0), HMM_Vec2(6.0, 1.0), HMM_Vec2(1.0,1.0));
+				rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(1.0, 0.0), HMM_Vec2(2.0, 2.0), HMM_Vec2(6.0, 1.0), HMM_Vec2(1.0,1.0));
 #if 1
 				SpriteSheet fontSheet  = resources_get_sprite_sheet(SS_FONT,  gs->resources);
 				rl_use_texture(&gs->frameArena, list, fontSheet);
 				ui_move(gs->uiCtx, -1.0, 0.0);
 				ui_draw_string(gs->uiCtx, &gs->frameArena, list, 16, "STARTING GAME IN: %f", 2-counter/60.0);
-				if((i32)(counter/60.0) == 2 || input.LMBDown)
+				if((i32)(counter/60.0) == 2 || (!input.LMBDown && input.LMBChanged))
 					game_start_game_mode(gs);
 #endif
 
@@ -145,12 +149,15 @@ FRAME(frame){
 				}
 
 				entity_update(gs->entities, gs->map);
+				particle_update(gs->particleSystem);
 
 				Shader spriteShader = resources_get_shader(SHADER_SPRITE, gs->resources);
 				Shader mapShader = resources_get_shader(SHADER_MAP, gs->resources);
+				Shader smokeShader = resources_get_shader(SHADER_SMOKE, gs->resources);
 
 				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, gs->resources);
 				SpriteSheet mapSheet = resources_get_sprite_sheet(SS_MAP, gs->resources);
+				SpriteSheet particlesSheet = resources_get_sprite_sheet(SS_PARTICLES, gs->resources);
 				SpriteSheet unitsSheet = resources_get_sprite_sheet(SS_UNITS, gs->resources);
 
 				rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(9.0, 9.0));
@@ -162,6 +169,10 @@ FRAME(frame){
 				rl_use_shader(&gs->frameArena, list, spriteShader);
 				rl_use_texture(&gs->frameArena, list, unitsSheet);
 				entity_draw(gs->entities, &gs->frameArena, list);
+
+				rl_use_shader(&gs->frameArena, list, smokeShader);
+				rl_use_texture(&gs->frameArena, list, particlesSheet);
+				particle_draw(gs->particleSystem, &gs->frameArena, list);
 				
 				rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(1.0, 1.0));
 

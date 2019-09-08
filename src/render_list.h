@@ -51,6 +51,7 @@ typedef struct{
 	hmm_v2 spritePos;
 	hmm_v2 spriteSize;
 	hmm_m4 model;
+	r32 time; //Used for particles
 }RLDrawSprite;
 
 #ifndef SYSTEM_LAYER
@@ -61,6 +62,7 @@ void rl_use_shader(MemoryArena* frameArena, RenderList *list, Shader shader);
 void rl_set_camera(MemoryArena*  frameArena, RenderList *list, hmm_vec2 pos, hmm_vec2 size);
 void rl_draw_sprite(MemoryArena* frameArena, RenderList *list, hmm_vec2 pos, r32 rotation, hmm_vec2 rotationOffset, hmm_vec2 size, hmm_vec2 spritePos, hmm_vec2 spriteSize);
 void rl_draw_simple_sprite(MemoryArena* frameArena, RenderList *list, hmm_vec2 pos, hmm_vec2 size, hmm_vec2 spritePos, hmm_vec2 spriteSize);
+void rl_draw_particle(MemoryArena* frameArena, RenderList *list, hmm_vec2 pos, hmm_vec2 size, hmm_vec2 spritePos, hmm_vec2 spriteSize, r32 time);
 void rl_draw_cached_simple_sprite(MemoryArena* frameArena, RenderList *list, RLDrawSprite *data);
 void rl_cache_simple_sprite(RLDrawSprite *data, hmm_vec2 pos, hmm_vec2 size, hmm_vec2 spritePos, hmm_vec2 spriteSize);
 

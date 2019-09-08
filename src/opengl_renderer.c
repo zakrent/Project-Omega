@@ -62,8 +62,10 @@ ZGLState opengl_state_init(){
 
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(ZGLVertex), (void*)offsetof(ZGLVertex, position));
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ZGLVertex), (void*)offsetof(ZGLVertex, texture));
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, sizeof(ZGLVertex), (void*)offsetof(ZGLVertex, time));
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -79,7 +81,7 @@ ZGLState opengl_state_init(){
 	return state;
 }
 
-void opengl_render_list(RenderList *renderList, ZGLState state){
+void opengl_render_list(RenderList *renderList, ZGLState state, r32 time){
 	DEBUG_TIMER_START();
 	//Resize window
 	r32 windowSizeData[4];
@@ -132,6 +134,7 @@ void opengl_render_list(RenderList *renderList, ZGLState state){
 				{
 					RLUseShader *rlUseShader = header->data;
 					glUseProgram(rlUseShader->handle);
+					glUniform1f(glGetUniformLocation(rlUseShader->handle, "realTime"), time);
 					break;
 				}
 			case RL_SET_CAMERA:
@@ -155,18 +158,30 @@ void opengl_render_list(RenderList *renderList, ZGLState state){
 					sprite.vertices[3].position = HMM_MultiplyMat4ByVec4(spriteMVP, HMM_Vec4(+1.0, -1.0, 0.0, 1.0)).XY;
 					sprite.vertices[4].position = sprite.vertices[0].position;
 					sprite.vertices[5].position = sprite.vertices[2].position;
-
-					r32 spriteSizeX = rlDrawSprite->spriteSize.X*state.texXMul;//-2.0*state.texXOffset;
-					r32 spriteSizeY = rlDrawSprite->spriteSize.Y*state.texYMul;//-2.0*state.texYOffset;
-					r32 spritePosX  = rlDrawSprite->spritePos.X*state.texXMul;//+state.texXOffset;
-					r32 spritePosY  = rlDrawSprite->spritePos.Y*state.texYMul;//+state.texYOffset;
-
+#if 0
+					r32 spriteSizeX = rlDrawSprite->spriteSize.X*state.texXMul-2.0*state.texXOffset;
+					r32 spriteSizeY = rlDrawSprite->spriteSize.Y*state.texYMul-2.0*state.texYOffset;
+					r32 spritePosX  = rlDrawSprite->spritePos.X*state.texXMul+state.texXOffset;
+					r32 spritePosY  = rlDrawSprite->spritePos.Y*state.texYMul+state.texYOffset;
+#else
+					r32 spriteSizeX = rlDrawSprite->spriteSize.X*state.texXMul;
+					r32 spriteSizeY = rlDrawSprite->spriteSize.Y*state.texYMul;
+					r32 spritePosX  = rlDrawSprite->spritePos.X*state.texXMul;
+					r32 spritePosY  = rlDrawSprite->spritePos.Y*state.texYMul;
+#endif
 					sprite.vertices[1].texture = HMM_Vec2(spritePosX, spritePosY+spriteSizeY);
 					sprite.vertices[0].texture = HMM_Vec2(spritePosX, spritePosY);
 					sprite.vertices[3].texture = HMM_Vec2(spritePosX+spriteSizeX, spritePosY);
 					sprite.vertices[2].texture = HMM_Vec2(spritePosX+spriteSizeX, spritePosY+spriteSizeY);
 					sprite.vertices[4].texture = sprite.vertices[0].texture;
 					sprite.vertices[5].texture = sprite.vertices[2].texture;
+
+					sprite.vertices[0].time = rlDrawSprite->time;
+					sprite.vertices[1].time = rlDrawSprite->time;
+					sprite.vertices[2].time = rlDrawSprite->time;
+					sprite.vertices[3].time = rlDrawSprite->time;
+					sprite.vertices[4].time = rlDrawSprite->time;
+					sprite.vertices[5].time = rlDrawSprite->time;
 
 					sprites[bufferedSprites] = sprite;
 

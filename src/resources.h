@@ -6,6 +6,7 @@ enum SpriteSheets{
 
 	SS_BASIC,
 	SS_MAP,
+	SS_PARTICLES,
 	SS_UNITS,
 	SS_FONT,
 
@@ -28,6 +29,7 @@ enum Shaders{
 
 	SHADER_SPRITE,
 	SHADER_MAP,
+	SHADER_SMOKE,
 
 	COUNT_SHADERS
 };

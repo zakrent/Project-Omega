@@ -66,6 +66,17 @@ void rl_draw_simple_sprite(MemoryArena* frameArena, RenderList *list, hmm_vec2 p
 	header->data = (void *)data;
 }
 
+void rl_draw_particle(MemoryArena* frameArena, RenderList *list, hmm_vec2 pos, hmm_vec2 size, hmm_vec2 spritePos, hmm_vec2 spriteSize, r32 time){
+	RLEntryHeader *header = rl_new_entry(frameArena, list, RL_DRAW_SPRITE);
+	RLDrawSprite *data = arena_alloc_type(frameArena, RLDrawSprite);
+
+	hmm_m4 m = HMM_MultiplyMat4( HMM_Translate(HMM_Vec3(pos.X, pos.Y, 0.0)), 
+								 HMM_Scale(HMM_Vec3(size.Width*0.5, size.Height*0.5, 1.0)));
+
+	*data = (RLDrawSprite){.model = m, .spritePos = spritePos, .spriteSize = spriteSize, .time = time};
+	header->data = (void *)data;
+}
+
 void rl_draw_cached_simple_sprite(MemoryArena* frameArena, RenderList *list, RLDrawSprite *data){
 	RLEntryHeader *header = rl_new_entry(frameArena, list, RL_DRAW_SPRITE);
 	header->data = (void *)data;

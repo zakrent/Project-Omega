@@ -4,6 +4,7 @@
 struct ZGLVertex{
 	hmm_v2 position;
 	hmm_v2 texture;
+	r32 time; //Used for particles
 } __attribute__((packed));
 typedef struct ZGLVertex ZGLVertex;
 
@@ -27,6 +28,6 @@ typedef struct{
 } ZGLState;
 
 ZGLState opengl_state_init();
-void opengl_render_list(RenderList *renderList, ZGLState state);
+void opengl_render_list(RenderList *renderList, ZGLState state, r32 time);
 
 #endif
