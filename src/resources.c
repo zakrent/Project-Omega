@@ -48,6 +48,10 @@ Shader resources_get_shader(u16 type, Resources *res){
 			vssFile = systemAPI.system_open_file("./data/shaders/sprite.vs");
 			fssFile = systemAPI.system_open_file("./data/shaders/sprite.fs");
 			break;
+		case SHADER_MAP:
+			vssFile = systemAPI.system_open_file("./data/shaders/map.vs");
+			fssFile = systemAPI.system_open_file("./data/shaders/map.fs");
+			break;
 		default:
 			break;
 	}
@@ -77,6 +81,9 @@ SpriteSheet resources_get_sprite_sheet(u16 type, Resources *res){
 	switch(type){
 		case SS_BASIC:
 			file = systemAPI.system_open_file("./data/sprites/basic.bmp");
+			break;
+		case SS_MAP:
+			file = systemAPI.system_open_file("./data/sprites/map.bmp");
 			break;
 		case SS_UNITS:
 			file = systemAPI.system_open_file("./data/sprites/units.bmp");

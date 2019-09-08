@@ -224,7 +224,7 @@ void entity_draw(EntitiesData *data, MemoryArena *frameArena, RenderList *list){
 		EntityEntry *entry = data->entities+i;
 		if(entry->valid){
 			Entity *e = &entry->entity;
-			const static float scalingFactor = 0.15;
+			const static float scalingFactor = 0.10;
 			switch(e->type){
 				case ENTITY_TANK:
 					rl_draw_sprite(frameArena, list, e->pos, e->rotation, HMM_Vec2(0.0, 0.0), HMM_Vec2(13.0*scalingFactor, 5.0*scalingFactor), HMM_Vec2(0.0, 34.0), HMM_Vec2(13.0, 5.0));

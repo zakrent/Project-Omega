@@ -105,18 +105,19 @@ FRAME(frame){
 	*list = (RenderList){0};
 	rl_color_clear(&gs->frameArena, list);
 
-	Shader spriteShader = resources_get_shader(SHADER_SPRITE, gs->resources);
-	rl_use_shader(&gs->frameArena, list, spriteShader);
-
 	static u64 counter = 0;
 	counter++;
 
 	switch(gs->mode){
 		case MODE_MENU:
 			{
-				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_UNITS, gs->resources);
+				Shader spriteShader = resources_get_shader(SHADER_SPRITE, gs->resources);
+				rl_use_shader(&gs->frameArena, list, spriteShader);
+
+				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_MAP, gs->resources);
 				rl_use_texture(&gs->frameArena, list, basicSheet);
-				rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(randf(-0.0, 0.0), randf(-0.0, 0.0)), HMM_Vec2(1.3, 0.6), HMM_Vec2(0.0, 17.0), HMM_Vec2(13.0,6.0));
+				rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(-1.0, 0.0), HMM_Vec2(2.0, 2.0), HMM_Vec2(6.0, 6.0), HMM_Vec2(1.0,1.0));
+				rl_draw_simple_sprite(&gs->frameArena, list, HMM_Vec2(1.0, 0.0), HMM_Vec2(2.0, 2.0), HMM_Vec2(6.0, 6.0), HMM_Vec2(1.0,1.0));
 #if 1
 				SpriteSheet fontSheet  = resources_get_sprite_sheet(SS_FONT,  gs->resources);
 				rl_use_texture(&gs->frameArena, list, fontSheet);
@@ -145,14 +146,20 @@ FRAME(frame){
 
 				entity_update(gs->entities, gs->map);
 
+				Shader spriteShader = resources_get_shader(SHADER_SPRITE, gs->resources);
+				Shader mapShader = resources_get_shader(SHADER_MAP, gs->resources);
+
 				SpriteSheet basicSheet = resources_get_sprite_sheet(SS_BASIC, gs->resources);
+				SpriteSheet mapSheet = resources_get_sprite_sheet(SS_MAP, gs->resources);
 				SpriteSheet unitsSheet = resources_get_sprite_sheet(SS_UNITS, gs->resources);
 
 				rl_set_camera( &gs->frameArena, list, HMM_Vec2(0.0, 0.0), HMM_Vec2(9.0, 9.0));
 
-				rl_use_texture(&gs->frameArena, list, basicSheet);
+				rl_use_shader(&gs->frameArena, list, mapShader);
+				rl_use_texture(&gs->frameArena, list, mapSheet);
 				map_draw(gs->map, &gs->frameArena, list);
 
+				rl_use_shader(&gs->frameArena, list, spriteShader);
 				rl_use_texture(&gs->frameArena, list, unitsSheet);
 				entity_draw(gs->entities, &gs->frameArena, list);
 				
@@ -164,6 +171,9 @@ FRAME(frame){
 				break;
 			}
 	}
+
+	Shader spriteShader = resources_get_shader(SHADER_SPRITE, gs->resources);
+	rl_use_shader(&gs->frameArena, list, spriteShader);
 
 	SpriteSheet fontSheet  = resources_get_sprite_sheet(SS_FONT,  gs->resources);
 	rl_use_texture(&gs->frameArena, list, fontSheet);

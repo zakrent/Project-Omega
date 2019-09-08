@@ -156,10 +156,10 @@ void opengl_render_list(RenderList *renderList, ZGLState state){
 					sprite.vertices[4].position = sprite.vertices[0].position;
 					sprite.vertices[5].position = sprite.vertices[2].position;
 
-					r32 spriteSizeX = rlDrawSprite->spriteSize.X*state.texXMul-2.0*state.texXOffset;
-					r32 spriteSizeY = rlDrawSprite->spriteSize.Y*state.texYMul-2.0*state.texYOffset;
-					r32 spritePosX  = rlDrawSprite->spritePos.X*state.texXMul+state.texXOffset;
-					r32 spritePosY  = rlDrawSprite->spritePos.Y*state.texYMul+state.texYOffset;
+					r32 spriteSizeX = rlDrawSprite->spriteSize.X*state.texXMul;//-2.0*state.texXOffset;
+					r32 spriteSizeY = rlDrawSprite->spriteSize.Y*state.texYMul;//-2.0*state.texYOffset;
+					r32 spritePosX  = rlDrawSprite->spritePos.X*state.texXMul;//+state.texXOffset;
+					r32 spritePosY  = rlDrawSprite->spritePos.Y*state.texYMul;//+state.texYOffset;
 
 					sprite.vertices[1].texture = HMM_Vec2(spritePosX, spritePosY+spriteSizeY);
 					sprite.vertices[0].texture = HMM_Vec2(spritePosX, spritePosY);
